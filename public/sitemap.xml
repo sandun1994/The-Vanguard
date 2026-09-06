@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
+  
+  <!-- Main Page -->
+  <url>
+    <loc>https://thevanguard.org/</loc>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Author Profile Page (Sandun Hewawasam) -->
+  <url>
+    <loc>https://thevanguard.org/author/sandun-hewawasam</loc>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Legal & E-E-A-T Compliance Pages -->
+  <url>
+    <loc>https://thevanguard.org/privacy-policy</loc>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://thevanguard.org/terms-of-service</loc>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://thevanguard.org/about-ai-disclosure</loc>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://thevanguard.org/contact</loc>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- 25 Comprehensive Published Articles Across 5 Categories -->
+
+  <!-- ARTIFICIAL INTELLIGENCE -->
+  <url>
+    <loc>https://thevanguard.org/article/multi-agent-frameworks-98-percent-autonomy-code-refactoring</loc>
+    <lastmod>2026-08-31</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <news:news>
+      <news:publication><news:name>TECH PULSE News Hub</news:name><news:language>en</news:language></news:publication>
+      <news:publication_date>2026-08-31</news:publication_date>
+      <news:title>Multi-Agent Frameworks Reach 98% Autonomy in Complex Enterprise Code Refactoring</news:title>
+    </news:news>
+  </url>
+  <url>
+    <loc>https://thevanguard.org/article/frontier-reasoning-models-solve-imo-math-olympiad-proofs</loc>
+    <lastmod>2026-08-31</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <news:news>
+      <news:publication><news:name>TECH PULSE News Hub</news:name><news:language>en</news:language></news:publication>
+      <news:publication_date>2026-08-31</news:publication_date>
+      <news:title>Frontier Reasoning Models Solve Complex International Math Olympiad Proofs</news:title>
+    </news:news>
+  </url>
+  <url>
+    <loc>https://thevanguard.org/article/mixture-of-depths-transformer-architectures-reduce-inference-latency-74-percent</loc>
+    <lastmod>2026-08-31</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://thevanguard.org/article/open-weight-400b-parameter-models-match-proprietary-commercial-llms</loc>
+    <lastmod>2026-08-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://thevanguard.org/article/neuromorphic-optical-processing-chips-exascale-compute-5-watts</loc>
+    <lastmod>2026-08-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- QUANTUM COMPUTING -->
+  <url>
+    <loc>https://thevanguard.org/article/room-temperature-superconductivity-confirmed-high-pressure-hydride</loc>
+    <lastmod>2026-08-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <news:news>
+      <news:publication><news:name>TECH PULSE News Hub</news:name><news:language>en</news:language></news:publication>
+      <news:publication_date>2026-08-30</news:publication_date>
+      <news:title>Room-Temperature Superconductivity Validated in High-Pressure Ternary Hydride Crystals</news:title>
+    </news:news>
+  </url>
+  <url>
+    <loc>https://thevanguard.org/article/topological-qubit-fault-tolerance-milestone-non-abelian-anyons</loc>
+    <lastmod>2026-08-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://thevanguard.org/article/10000-logical-qubit-quantum-processor-simulates-molecular-dynamics</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://thevanguard.org/article/quantum-key-distribution-qkd-satellite-constellation-secures-fiber</loc>
+    <lastmod>2026-08-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://thevanguard.org/article/hybrid-quantum-classical-algorithms-solid-state-battery-electrolyte</loc>
+    <lastmod>2026-08-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- BIOTECH & HEALTH -->
+  <url>
+    <loc>https://thevanguard.org/article/crispr-5-precision-base-editing-full-remission-sickle-cell</loc>
+    <lastmod>2026-08-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <news:news>
+      <news:publication><news:name>TECH PULSE News Hub</news:name><news:language>en</news:language></news:publication>
+      <news:publication_date>2026-08-30</news:publication_date>
+      <news:title>CRISPR 5.0 Precision Base-Editing Reaches 100% Remission in Sickle Cell Phase III Trials</news:title>
+    </news:news>
+  </url>
+  <url>
+    <loc>https://thevanguard.org/article/personalized-mrna-cancer-vaccines-target-neoantigens-melanoma</loc>
+    <lastmod>2026-08-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://thevanguard.org/article/universal-senolytic-enzyme-therapy-extends-mammalian-lifespan-35-percent</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://thevanguard.org/article/ai-designed-synthetic-enzymes-deconstruct-microplastics-48-hours</loc>
+    <lastmod>2026-08-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://thevanguard.org/article/high-density-brain-computer-interfaces-restore-speech-paralysis</loc>
+    <lastmod>2026-08-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- SPACE EXPLORATION -->
+  <url>
+    <loc>https://thevanguard.org/article/james-webb-space-telescope-detects-biosignatures-exoplanet-k2-18b</loc>
+    <lastmod>2026-08-31</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://thevanguard.org/article/starship-achieves-orbit-to-orbit-cryogenic-propellant-transfer</loc>
+    <lastmod>2026-08-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://thevanguard.org/article/autonomous-lunar-south-pole-base-construction-regolith-3d-printing</loc>
+    <lastmod>2026-08-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://thevanguard.org/article/nuclear-thermal-propulsion-ntp-engine-completes-full-power-test</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://thevanguard.org/article/europa-clipper-spacecraft-detects-water-vapor-plumes-organics</loc>
+    <lastmod>2026-08-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- ROBOTICS & HARDWARE -->
+  <url>
+    <loc>https://thevanguard.org/article/humanoid-bipedal-robots-enter-commercial-automotive-assembly-lines</loc>
+    <lastmod>2026-08-31</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://thevanguard.org/article/solid-state-sodium-ion-batteries-reach-500-wh-kg-energy-density</loc>
+    <lastmod>2026-08-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://thevanguard.org/article/autonomous-micro-drone-swarms-execute-search-and-rescue-caves</loc>
+    <lastmod>2026-08-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://thevanguard.org/article/photonic-interconnect-systems-integrated-directly-on-2nm-chips</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://thevanguard.org/article/soft-haptic-exosuits-restore-mobility-age-related-muscle-atrophy</loc>
+    <lastmod>2026-08-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+</urlset>
