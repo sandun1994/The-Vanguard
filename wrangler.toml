@@ -13,7 +13,7 @@ pages_build_output_dir = "dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "the_vanguard_db"
-database_id = "your-d1-database-id-here"
+database_id = "bdb7138f-b151-4c3b-af16-7013dc936b8a"
 
 [vars]
 ENVIRONMENT = "production"
