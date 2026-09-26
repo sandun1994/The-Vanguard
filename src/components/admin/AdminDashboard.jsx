@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import { Shield, Layers, Play, Settings, Activity, LogOut, ArrowLeft, Bot, FileText, CheckCircle2, Zap, Sun, Moon } from 'lucide-react';
+import { Shield, Layers, Play, Settings, Activity, LogOut, ArrowLeft, Bot, FileText, CheckCircle2, Zap, Sun, Moon, KeyRound, UserCheck, Flame } from 'lucide-react';
 import { ContentQueueManager } from './ContentQueueManager';
 import { PipelineRunner } from './PipelineRunner';
 import { AgentSettings } from './AgentSettings';
 import { MetricsAnalytics } from './MetricsAnalytics';
+import { AdminAccountManager } from './AdminAccountManager';
+import { TrendKeywordRadar } from './TrendKeywordRadar';
+import { AutonomousNewsroomBanner } from './AutonomousNewsroomBanner';
 import { ARTICLE_STATUS } from '../../types/blog';
 
 export const AdminDashboard = ({
@@ -21,10 +24,16 @@ export const AdminDashboard = ({
   onLogout,
   onBackToBlog
 }) => {
-  const [activeView, setActiveView] = useState('queue'); // 'queue' | 'runner' | 'settings' | 'metrics'
+  const [activeView, setActiveView] = useState('queue'); // 'queue' | 'trends' | 'runner' | 'settings' | 'metrics' | 'account'
+  const [selectedTrendForPipeline, setSelectedTrendForPipeline] = useState(null);
 
   const pendingCount = articles.filter(a => a.status === ARTICLE_STATUS.PENDING_REVIEW).length;
   const publishedCount = articles.filter(a => a.status === ARTICLE_STATUS.PUBLISHED).length;
+
+  const handleTriggerPipelineFromTrend = (trend) => {
+    setSelectedTrendForPipeline(trend);
+    setActiveView('runner');
+  };
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-main)', color: 'var(--text-primary)', transition: 'background-color 0.3s ease' }}>
@@ -114,6 +123,27 @@ export const AdminDashboard = ({
               {theme === 'dark' ? <Sun size={18} color="#f59e0b" /> : <Moon size={18} color="#6366f1" />}
             </button>
 
+            {/* Admin Account & Security Shortcut */}
+            <button
+              onClick={() => setActiveView('account')}
+              style={{
+                backgroundColor: activeView === 'account' ? 'rgba(99, 102, 241, 0.18)' : (theme === 'light' ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)'),
+                border: activeView === 'account' ? '1px solid #6366f1' : '1px solid var(--border-subtle)',
+                color: activeView === 'account' ? '#6366f1' : 'var(--text-secondary)',
+                padding: '0.5rem 0.85rem',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '0.82rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                fontWeight: '600'
+              }}
+              title="Admin Credentials & Security"
+            >
+              <KeyRound size={15} /> Account & Password
+            </button>
+
             <button
               onClick={onLogout}
               style={{
@@ -146,9 +176,11 @@ export const AdminDashboard = ({
         }}>
           {[
             { id: 'queue', label: 'Content Queue & Articles', icon: Layers, count: pendingCount ? `${pendingCount} Pending` : null },
+            { id: 'trends', label: 'Google Keyword Radar', icon: Flame, isBreakout: true },
             { id: 'runner', label: 'Multi-Agent Pipeline Runner', icon: Play },
             { id: 'settings', label: 'Prompts & Governance Settings', icon: Settings },
-            { id: 'metrics', label: 'Visitor Analytics & Traffic Metrics', icon: Activity }
+            { id: 'metrics', label: 'Visitor Analytics & Traffic Metrics', icon: Activity },
+            { id: 'account', label: 'Admin Security & Login Credentials', icon: KeyRound }
           ].map(tab => {
             const Icon = tab.icon;
             const isActive = activeView === tab.id;
@@ -195,6 +227,17 @@ export const AdminDashboard = ({
 
       {/* Main Admin Dashboard Body */}
       <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '2rem 1.5rem' }}>
+        <AutonomousNewsroomBanner
+          settings={settings}
+          onSaveSettings={onSaveSettings}
+          onOpenArticle={onOpenArticle}
+          onGoToSettings={() => {
+            setActiveView('settings');
+            setTimeout(() => {
+              window.scrollTo({ top: 180, behavior: 'smooth' });
+            }, 60);
+          }}
+        />
         {activeView === 'queue' && (
           <ContentQueueManager
             articles={articles}
@@ -206,11 +249,19 @@ export const AdminDashboard = ({
           />
         )}
 
+        {activeView === 'trends' && (
+          <TrendKeywordRadar
+            onTriggerPipelineWithTrend={handleTriggerPipelineFromTrend}
+          />
+        )}
+
         {activeView === 'runner' && (
           <PipelineRunner
             topics={settings.topics}
             onArticleCreated={onArticleCreated}
             onOpenArticle={onOpenArticle}
+            initialTrend={selectedTrendForPipeline}
+            onOpenTrendsRadar={() => setActiveView('trends')}
           />
         )}
 
@@ -228,6 +279,10 @@ export const AdminDashboard = ({
             articles={articles}
             onOpenArticle={onOpenArticle}
           />
+        )}
+
+        {activeView === 'account' && (
+          <AdminAccountManager onLogout={onLogout} />
         )}
       </main>
     </div>

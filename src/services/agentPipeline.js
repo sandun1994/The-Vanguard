@@ -17,7 +17,7 @@ const COVER_IMAGES = [
  * @param {string} topicQuery - Target search topic
  * @param {function} onProgressStep - Callback for step updates
  */
-export const runAgentPipeline = async (topicQuery, onProgressStep = () => {}) => {
+export const runAgentPipeline = async (topicQuery, onProgressStep = () => {}, trendContext = null) => {
   const startTime = Date.now();
   const settings = getSettings();
   const governanceMode = settings.governanceMode || 'manual_review';
@@ -26,8 +26,10 @@ export const runAgentPipeline = async (topicQuery, onProgressStep = () => {}) =>
   onProgressStep({
     step: 1,
     name: 'Discovery & Scraping',
-    agent: 'Web Research Agent (Serper/Tavily API)',
-    log: `Triggering search query: "${topicQuery}"...\nFetching top 5 domain authority results...\nExtracted 8 primary source payloads & citation metadata.`,
+    agent: 'Web Research Agent (Serper/Tavily/Google Trends API)',
+    log: trendContext
+      ? `Identified Google Search Pattern spike: "${topicQuery}" (${trendContext.velocity})...\nExpanding 4 high-velocity autocomplete patterns: ${trendContext.subQueries.slice(0, 2).join(' | ')}...\nExtracted 8 authoritative primary source payloads & citation metadata.`
+      : `Triggering search query: "${topicQuery}"...\nFetching top 5 domain authority results...\nExtracted 8 primary source payloads & citation metadata.`,
     status: 'running',
     progress: 20
   });
@@ -49,7 +51,9 @@ export const runAgentPipeline = async (topicQuery, onProgressStep = () => {}) =>
     step: 3,
     name: 'Content Generation',
     agent: 'Writer Agent (Claude 3.5 / Gemini 2.5)',
-    log: `Applying scientific journalism tone guidelines...\nSynthesizing body text in Markdown format...\nGenerating technical code blocks, blockquotes, and key takeaway bullet points.`,
+    log: trendContext
+      ? `Synthesizing deep technical breakdown addressing Google "People Also Ask" search intent...\nFocusing on: "${trendContext.targetQuestions[0]}"...\nGenerating technical code blocks, benchmark tables, and takeaway takeaways.`
+      : `Applying scientific journalism tone guidelines...\nSynthesizing body text in Markdown format...\nGenerating technical code blocks, blockquotes, and key takeaway bullet points.`,
     status: 'running',
     progress: 70
   });
@@ -60,7 +64,9 @@ export const runAgentPipeline = async (topicQuery, onProgressStep = () => {}) =>
     step: 4,
     name: 'SEO Synthesis & Tagging',
     agent: 'SEO Specialist Agent',
-    log: `Generating high-CTR title & meta description...\nOptimizing URL slug: "${topicQuery.toLowerCase().replace(/[^a-z0-9]+/g, '-')}"...\nSynthesizing 4 semantic category tags & Fark badge.`,
+    log: trendContext
+      ? `Optimizing high-CTR title matching Google search patterns...\nEmbedding breakout keyword "${trendContext.keyword}" & long-tail search tags...\nURL slug generated and categorized for Google News indexing.`
+      : `Generating high-CTR title & meta description...\nOptimizing URL slug: "${topicQuery.toLowerCase().replace(/[^a-z0-9]+/g, '-')}"...\nSynthesizing 4 semantic category tags & Fark badge.`,
     status: 'running',
     progress: 88
   });
@@ -88,27 +94,29 @@ export const runAgentPipeline = async (topicQuery, onProgressStep = () => {}) =>
 
   const initialStatus = governanceMode === 'autonomous' ? ARTICLE_STATUS.PUBLISHED : ARTICLE_STATUS.PENDING_REVIEW;
 
-  let category = 'Artificial Intelligence';
-  let farkBadge = '[BREAKTHROUGH]';
+  let category = trendContext?.category || 'Artificial Intelligence';
+  let farkBadge = trendContext?.farkBadge || '[BREAKTHROUGH]';
   let publisherIcon = '⚡';
   
-  const queryLower = topicQuery.toLowerCase();
-  if (queryLower.includes('quantum') || queryLower.includes('physics')) {
-    category = 'Quantum Computing';
-    farkBadge = '[QUANTUM]';
-    publisherIcon = '⚛️';
-  } else if (queryLower.includes('gene') || queryLower.includes('bio') || queryLower.includes('crispr') || queryLower.includes('health')) {
-    category = 'Biotech & Health';
-    farkBadge = '[BIOTECH]';
-    publisherIcon = '🧬';
-  } else if (queryLower.includes('space') || queryLower.includes('rocket') || queryLower.includes('fusion') || queryLower.includes('orbit')) {
-    category = 'Space Exploration';
-    farkBadge = '[SPACE]';
-    publisherIcon = '🚀';
-  } else if (queryLower.includes('robot') || queryLower.includes('hardware') || queryLower.includes('autonomous')) {
-    category = 'Robotics & Hardware';
-    farkBadge = '[HARDWARE]';
-    publisherIcon = '🤖';
+  if (!trendContext) {
+    const queryLower = topicQuery.toLowerCase();
+    if (queryLower.includes('quantum') || queryLower.includes('physics')) {
+      category = 'Quantum Computing';
+      farkBadge = '[QUANTUM]';
+      publisherIcon = '⚛️';
+    } else if (queryLower.includes('gene') || queryLower.includes('bio') || queryLower.includes('crispr') || queryLower.includes('health')) {
+      category = 'Biotech & Health';
+      farkBadge = '[BIOTECH]';
+      publisherIcon = '🧬';
+    } else if (queryLower.includes('space') || queryLower.includes('rocket') || queryLower.includes('fusion') || queryLower.includes('orbit')) {
+      category = 'Space Exploration';
+      farkBadge = '[SPACE]';
+      publisherIcon = '🚀';
+    } else if (queryLower.includes('robot') || queryLower.includes('hardware') || queryLower.includes('autonomous')) {
+      category = 'Robotics & Hardware';
+      farkBadge = '[HARDWARE]';
+      publisherIcon = '🤖';
+    }
   }
 
   const cleanSlug = topicQuery
@@ -119,11 +127,18 @@ export const runAgentPipeline = async (topicQuery, onProgressStep = () => {}) =>
 
   const todayStr = new Date().toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
 
+  const customQnASection = trendContext && trendContext.targetQuestions && trendContext.targetQuestions.length > 0
+    ? `\n\n---\n\n## 5. Frequently Searched Technical Questions (Google Search Intent Breakdown)\n\n` +
+      trendContext.targetQuestions.map((q, idx) => 
+        `### Q${idx + 1}: ${q}\n**Analytical Finding**: Technical analysis and peer-reviewed consensus indicate that verified implementations address this through deterministic verification and high-fidelity testing frameworks. Cross-domain benchmarks confirm high reliability under real-world operating loads.\n`
+      ).join('\n')
+    : '';
+
   const generatedArticle = {
     id: `post-${Date.now().toString().slice(-6)}`,
     title: topicQuery.charAt(0).toUpperCase() + topicQuery.slice(1),
     slug: cleanSlug || `article-${Date.now()}`,
-    summary: `Comprehensive research report examining recent breakthroughs, empirical validation data, and industry impact regarding ${topicQuery}.`,
+    summary: `Comprehensive research report examining recent breakthroughs, empirical validation data, and Google search trend spikes regarding ${topicQuery}.`,
     category,
     farkBadge,
     status: initialStatus,
@@ -132,10 +147,19 @@ export const runAgentPipeline = async (topicQuery, onProgressStep = () => {}) =>
     publishedAt: new Date().toISOString(),
     dateGroup: `Today - ${todayStr}`,
     coverImage,
-    tags: [category.split(' ')[0], 'Research Report', 'Technology Review', 'Industry Analysis'],
+    tags: [
+      category.split(' ')[0],
+      trendContext ? 'Google Trending' : 'Research Report',
+      'Technology Review',
+      'Industry Analysis',
+      ...(trendContext?.subQueries?.slice(0, 2).map(sq => sq.split(' ').slice(0, 3).join(' ')) || [])
+    ],
     upvotes: Math.floor(Math.random() * 35) + 15,
     isUpvoted: false,
     isBookmarked: false,
+    isTrendDriven: !!trendContext,
+    trendVelocity: trendContext?.velocity || null,
+    trendSearchVolume: trendContext?.searchVolume || null,
     publisher: {
       name: 'Global Tech Review',
       domain: 'techreview.com',
@@ -151,7 +175,7 @@ export const runAgentPipeline = async (topicQuery, onProgressStep = () => {}) =>
     ],
     content: `## 1. Executive Summary & Core Thesis
 
-Recent developments synthesized across multiple peer-reviewed publications, open-source repositories, and industry technical announcements highlight a pivotal shift in **${topicQuery}**.
+Recent developments synthesized across multiple peer-reviewed publications, open-source repositories, and Google breakout search queries highlight a pivotal shift in **${topicQuery}**.
 
 Our editorial team analyzed primary source research from **ArXiv**, **IEEE Xplore**, and **Nature Portfolio** to compile this comprehensive, multi-source synthesis.
 
@@ -188,11 +212,11 @@ Modern implementations of **${topicQuery}** rely on a multi-stage feedback archi
 
 - **Phase I (Discovery)**: Initial theoretical frameworks established in peer-reviewed literature.
 - **Phase II (Validation)**: Empirical benchmark testing across 500 enterprise environments.
-- **Phase III (Commercialization)**: Production adoption driving a 3.5x reduction in operational latency.
+- **Phase III (Commercialization)**: Production adoption driving a 3.5x reduction in operational latency.${customQnASection}
 
 ---
 
-## 5. Transparent Primary Source Citations
+## ${customQnASection ? '6' : '5'}. Transparent Primary Source Citations
 
 > [!NOTE]
 > **Verified Primary Sources**  

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, Bot, Key, Settings, Plus, Trash2, Shield, Check, Sparkles, Globe } from 'lucide-react';
+import { Save, Bot, Key, Settings, Plus, Trash2, Shield, Check, Sparkles, Globe, Zap } from 'lucide-react';
 import { DEFAULT_GOVERNANCE_MODE } from '../../types/blog';
 
 export const AgentSettings = ({ settings, onSaveSettings }) => {
@@ -8,13 +8,20 @@ export const AgentSettings = ({ settings, onSaveSettings }) => {
   const [prompts, setPrompts] = useState(settings.prompts || {});
   const [topics, setTopics] = useState(settings.topics || []);
   const [governanceMode, setGovernanceMode] = useState(settings.governanceMode || DEFAULT_GOVERNANCE_MODE);
+  const [autonomousFrequencyMinutes, setAutonomousFrequencyMinutes] = useState(settings.autonomousFrequencyMinutes || 30);
+  const [autonomousSourceStrategy, setAutonomousSourceStrategy] = useState(settings.autonomousSourceStrategy || 'google_breakouts');
   const [apiKeys, setApiKeys] = useState(settings.apiKeys || {});
   const [newTopic, setNewTopic] = useState('');
   const [savedSuccess, setSavedSuccess] = useState(false);
 
+  const getTopicLabel = (t) => (typeof t === 'string' ? t : t?.query || '');
+
   const handleAddTopic = () => {
-    if (newTopic.trim() && !topics.includes(newTopic.trim())) {
-      setTopics([...topics, newTopic.trim()]);
+    const trimmed = newTopic.trim();
+    if (!trimmed) return;
+    const exists = topics.some(t => getTopicLabel(t).toLowerCase() === trimmed.toLowerCase());
+    if (!exists) {
+      setTopics([...topics, { id: `t_${Date.now()}`, query: trimmed, category: 'General', active: true, frequencyHours: 12 }]);
       setNewTopic('');
     }
   };
@@ -29,6 +36,8 @@ export const AgentSettings = ({ settings, onSaveSettings }) => {
       siteName: siteName.trim() || 'NOVUM',
       siteTagline: siteTagline.trim() || 'AI JOURNAL',
       governanceMode,
+      autonomousFrequencyMinutes,
+      autonomousSourceStrategy,
       prompts,
       topics,
       apiKeys
@@ -90,6 +99,53 @@ export const AgentSettings = ({ settings, onSaveSettings }) => {
             />
           </div>
         </div>
+
+        {governanceMode === 'autonomous' && (
+          <div style={{
+            marginTop: '1.25rem',
+            padding: '1.25rem',
+            backgroundColor: 'var(--bg-main)',
+            borderRadius: '12px',
+            border: '1px solid rgba(16, 185, 129, 0.3)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: '#10b981', fontWeight: '700', fontSize: '0.95rem' }}>
+              <Zap size={18} /> Autonomous Trend Scanning & Auto-Publishing Settings
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+                  Auto-Scan & Publishing Frequency
+                </label>
+                <select
+                  value={autonomousFrequencyMinutes}
+                  onChange={(e) => setAutonomousFrequencyMinutes(Number(e.target.value))}
+                  style={{ width: '100%', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '0.65rem', color: 'var(--text-primary)', fontSize: '0.85rem' }}
+                >
+                  <option value={2}>Fast Demo Mode (Every 2 Minutes - Testing)</option>
+                  <option value={15}>Every 15 Minutes (High Velocity)</option>
+                  <option value={30}>Every 30 Minutes (Recommended)</option>
+                  <option value={60}>Every 1 Hour</option>
+                  <option value={120}>Every 2 Hours</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+                  Trending Keyword Source Strategy
+                </label>
+                <select
+                  value={autonomousSourceStrategy}
+                  onChange={(e) => setAutonomousSourceStrategy(e.target.value)}
+                  style={{ width: '100%', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '0.65rem', color: 'var(--text-primary)', fontSize: '0.85rem' }}
+                >
+                  <option value="google_breakouts">Google Trends Breakout Spikes (Over +500% Velocity)</option>
+                  <option value="all_categories">Balanced Distribution (AI, Quantum, Biotech, Space, Robotics)</option>
+                  <option value="high_intent">Google Autocomplete & People Also Ask Intent</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Governance & Autonomous Mode Card */}
@@ -111,7 +167,7 @@ export const AgentSettings = ({ settings, onSaveSettings }) => {
             }}
           >
             <div style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '1rem', marginBottom: '0.4rem' }}>
-              🛡️ Manual Review First Mode (Recommended)
+              Manual Review Mode
             </div>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>
               Newly generated articles are assigned <strong style={{ color: '#d97706' }}>pending_review</strong> status. Requires human review before appearing on the public blog.
@@ -130,7 +186,7 @@ export const AgentSettings = ({ settings, onSaveSettings }) => {
             }}
           >
             <div style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '1rem', marginBottom: '0.4rem' }}>
-              ⚡ 100% Autonomous Publishing Mode
+              Autonomous Publishing Mode
             </div>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>
               Agent runs publish articles directly to the live blog frontend with <strong style={{ color: '#10b981' }}>published</strong> status. Fully automated newsroom execution.
@@ -216,14 +272,17 @@ export const AgentSettings = ({ settings, onSaveSettings }) => {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          {topics.map((t, idx) => (
-            <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'var(--bg-main)', padding: '0.6rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-primary)' }}>{t}</span>
-              <button type="button" onClick={() => handleRemoveTopic(idx)} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer' }}>
-                <Trash2 size={15} />
-              </button>
-            </div>
-          ))}
+          {topics.map((t, idx) => {
+            const label = getTopicLabel(t);
+            return (
+              <div key={t?.id || idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'var(--bg-main)', padding: '0.6rem 0.85rem', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-primary)' }}>{label}</span>
+                <button type="button" onClick={() => handleRemoveTopic(idx)} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer' }}>
+                  <Trash2 size={15} />
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
 

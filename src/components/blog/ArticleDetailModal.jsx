@@ -14,6 +14,15 @@ export const ArticleDetailModal = ({ article, allArticles = [], onClose, onSelec
   const authorName = (article.author || 'Senior Research Desk')
     .replace(/Novum Multi-Agent Pipeline|AI Researcher|Biotech Desk AI|AI Multi-Agent/gi, 'Senior Research Desk');
 
+  // Close modal on Escape key press
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [onClose]);
+
   // Dynamic SEO Title & JSON-LD NewsArticle Schema Injection
   useEffect(() => {
     const originalTitle = document.title;
@@ -187,42 +196,70 @@ export const ArticleDetailModal = ({ article, allArticles = [], onClose, onSelec
           top: 0,
           zIndex: 30,
           backgroundColor: 'var(--bg-card)',
-          backdropFilter: 'blur(16px)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
           borderBottom: '1px solid var(--border-subtle)',
           padding: '0.85rem 1.75rem',
           display: 'flex',
           alignItems: 'center',
-          justify: 'space-between'
+          justifyContent: 'space-between',
+          width: '100%',
+          boxSizing: 'border-box'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          {/* Left Category & Publisher */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
             <CategoryBadge category={article.category} />
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '600' }}>
-              Published by {article.publisher?.name || authorName}
+            <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', fontWeight: '600' }}>
+              Published by <strong style={{ color: 'var(--text-primary)' }}>{article.publisher?.name || authorName}</strong>
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          {/* Right Controls - Firmly Pinned to Far Right Corner */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginLeft: 'auto' }}>
             <button
               onClick={() => alert(`Share URL: ${window.location.href}`)}
               className="btn-secondary"
-              style={{ fontSize: '0.78rem', padding: '0.4rem 0.85rem' }}
+              style={{
+                fontSize: '0.8rem',
+                padding: '0.45rem 0.95rem',
+                borderRadius: '8px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                cursor: 'pointer'
+              }}
             >
               <Share2 size={14} /> Share
             </button>
 
             <button
               onClick={onClose}
+              title="Close modal (Esc)"
               style={{
-                backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                backgroundColor: 'rgba(255, 255, 255, 0.08)',
                 border: '1px solid var(--border-subtle)',
                 color: 'var(--text-primary)',
-                borderRadius: '50%',
-                width: '34px',
-                height: '34px',
-                display: 'flex',
+                borderRadius: '10px',
+                width: '36px',
+                height: '36px',
+                display: 'inline-flex',
                 alignItems: 'center',
-                justify: 'center',
-                cursor: 'pointer'
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                flexShrink: 0
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.18)';
+                e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.45)';
+                e.currentTarget.style.color = '#f87171';
+                e.currentTarget.style.transform = 'scale(1.08)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+                e.currentTarget.style.borderColor = 'var(--border-subtle)';
+                e.currentTarget.style.color = 'var(--text-primary)';
+                e.currentTarget.style.transform = 'scale(1)';
               }}
             >
               <X size={18} />

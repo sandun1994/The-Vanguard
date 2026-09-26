@@ -52,7 +52,7 @@
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <news:news>
-      <news:publication><news:name>TECH PULSE News Hub</news:name><news:language>en</news:language></news:publication>
+      <news:publication><news:name>The Vanguard</news:name><news:language>en</news:language></news:publication>
       <news:publication_date>2026-08-31</news:publication_date>
       <news:title>Multi-Agent Frameworks Reach 98% Autonomy in Complex Enterprise Code Refactoring</news:title>
     </news:news>
@@ -63,7 +63,7 @@
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <news:news>
-      <news:publication><news:name>TECH PULSE News Hub</news:name><news:language>en</news:language></news:publication>
+      <news:publication><news:name>The Vanguard</news:name><news:language>en</news:language></news:publication>
       <news:publication_date>2026-08-31</news:publication_date>
       <news:title>Frontier Reasoning Models Solve Complex International Math Olympiad Proofs</news:title>
     </news:news>
@@ -94,7 +94,7 @@
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <news:news>
-      <news:publication><news:name>TECH PULSE News Hub</news:name><news:language>en</news:language></news:publication>
+      <news:publication><news:name>The Vanguard</news:name><news:language>en</news:language></news:publication>
       <news:publication_date>2026-08-30</news:publication_date>
       <news:title>Room-Temperature Superconductivity Validated in High-Pressure Ternary Hydride Crystals</news:title>
     </news:news>
@@ -131,7 +131,7 @@
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <news:news>
-      <news:publication><news:name>TECH PULSE News Hub</news:name><news:language>en</news:language></news:publication>
+      <news:publication><news:name>The Vanguard</news:name><news:language>en</news:language></news:publication>
       <news:publication_date>2026-08-30</news:publication_date>
       <news:title>CRISPR 5.0 Precision Base-Editing Reaches 100% Remission in Sickle Cell Phase III Trials</news:title>
     </news:news>

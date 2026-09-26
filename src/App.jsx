@@ -9,18 +9,23 @@ import {
   getMetrics,
   getAuthStatus,
   setAuthStatus,
+  getSavedViewMode,
+  setSavedViewMode,
+  fetchServerArticles,
   toggleUpvote,
   toggleBookmark,
   addComment,
   recordPageView
 } from './services/storage';
 import { ARTICLE_STATUS, VIEW_MODES } from './types/blog';
+import { syncAutonomousEngine } from './services/autonomousEngine';
 
 import { BlogHeader } from './components/blog/BlogHeader';
 import { HeroArticle } from './components/blog/HeroArticle';
 import { ArticleGrid } from './components/blog/ArticleGrid';
 import { FarkCompactFeed } from './components/blog/FarkCompactFeed';
 import { SidebarWidgets } from './components/blog/SidebarWidgets';
+import { Pagination } from './components/blog/Pagination';
 import { ArticleDetailModal } from './components/blog/ArticleDetailModal';
 import { CommentsDrawer } from './components/blog/CommentsDrawer';
 import { SubmitLinkModal } from './components/blog/SubmitLinkModal';
@@ -36,7 +41,8 @@ export function App() {
   const [articles, setArticles] = useState([]);
   const [settings, setSettingsState] = useState({});
   const [metrics, setMetricsState] = useState({});
-  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => getAuthStatus());
+  const [autoPublishedToast, setAutoPublishedToast] = useState(null);
 
   // Theme State ('dark' | 'light')
   const [theme, setTheme] = useState(() => {
@@ -83,8 +89,65 @@ export function App() {
     }
   };
 
-  // View Navigation & Modals State
-  const [viewMode, setViewMode] = useState('blog'); // 'blog' | 'admin'
+  // View Navigation & Modals State (Restore admin view if user was on dashboard and is authenticated)
+  const [viewMode, setViewMode] = useState(() => {
+    try {
+      const isAuth = getAuthStatus();
+      if (isAuth) {
+        const savedView = getSavedViewMode();
+        const hash = typeof window !== 'undefined' ? window.location.hash : '';
+        if (savedView === 'admin' || hash === '#admin') {
+          return 'admin';
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return 'blog';
+  });
+
+  const handleSwitchView = (mode) => {
+    setViewMode(mode);
+    setSavedViewMode(mode);
+    if (typeof window !== 'undefined') {
+      if (mode === 'admin') {
+        if (window.location.hash !== '#admin') {
+          window.location.hash = 'admin';
+        }
+      } else {
+        if (window.location.hash === '#admin') {
+          history.replaceState(null, document.title, window.location.pathname + window.location.search);
+        }
+      }
+    }
+  };
+
+  // Sync URL hash with viewMode
+  useEffect(() => {
+    if (viewMode === 'admin' && window.location.hash !== '#admin') {
+      window.location.hash = 'admin';
+    }
+  }, [viewMode]);
+
+  // Support browser Back/Forward navigation between blog and admin view
+  useEffect(() => {
+    const handleHashChange = () => {
+      const isAuth = getAuthStatus();
+      if (window.location.hash === '#admin') {
+        if (isAuth) {
+          setViewMode('admin');
+          setSavedViewMode('admin');
+        } else {
+          setIsAdminModalOpen(true);
+        }
+      } else if (window.location.hash === '' && viewMode === 'admin') {
+        setViewMode('blog');
+        setSavedViewMode('blog');
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [viewMode]);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState(null);
@@ -98,17 +161,63 @@ export function App() {
     setIsAuthorModalOpen(true);
   };
 
-  // Filter & Search State
+  // Filter & Search & Pagination State
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ARTICLES_PER_PAGE = 20;
 
-  // Load initial data from localStorage & record pageview
+  // Reset pagination to Page 1 when category or search query changes
   useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, searchQuery]);
+
+  // Autonomous Engine Synchronizer & Live Event Listener
+  useEffect(() => {
+    syncAutonomousEngine();
+
+    const handleAutoPublished = (e) => {
+      setArticles(getArticles());
+      setMetricsState(getMetrics());
+      const newArticle = e.detail?.article;
+      if (newArticle) {
+        setAutoPublishedToast(newArticle);
+        setTimeout(() => setAutoPublishedToast(null), 8000);
+      }
+    };
+
+    window.addEventListener('the_vanguard_autonomous_article_published', handleAutoPublished);
+    return () => window.removeEventListener('the_vanguard_autonomous_article_published', handleAutoPublished);
+  }, [settings.governanceMode, settings.autonomousFrequencyMinutes]);
+
+  // Load initial data and continuously synchronize from central server database
+  useEffect(() => {
+    // 1. Instant optimistic load from cache
     setArticles(getArticles());
     setSettingsState(getSettings());
     setMetricsState(getMetrics());
     setIsAdminLoggedIn(getAuthStatus());
     recordPageView();
+
+    // 2. Fetch fresh articles from central server API (shared across all browsers)
+    const syncArticles = () => {
+      fetchServerArticles().then(serverArticles => {
+        if (serverArticles && serverArticles.length > 0) {
+          setArticles(serverArticles);
+        }
+      });
+    };
+
+    syncArticles();
+
+    // 3. Re-sync when switching tabs/windows or every 10 seconds so all browsers stay in real-time sync
+    window.addEventListener('focus', syncArticles);
+    const interval = setInterval(syncArticles, 10000);
+
+    return () => {
+      window.removeEventListener('focus', syncArticles);
+      clearInterval(interval);
+    };
   }, []);
 
   // Filtered published articles for public live blog
@@ -135,8 +244,18 @@ export function App() {
     return true;
   });
 
-  const featuredArticle = publishedArticles[0];
-  const gridArticles = publishedArticles.slice(1);
+  const isCardsHeroMode = feedViewMode === VIEW_MODES.CARDS && selectedCategory === 'All' && !searchQuery.trim();
+
+  // 20 Articles Per Page Logic:
+  // On Page 1 in Cards Hero mode: 1 Hero Article + 19 Grid Articles = 20 articles total.
+  // On Page 2+ or Fark mode or filtered view: exactly 20 articles in the grid/feed.
+  const featuredArticle = isCardsHeroMode && currentPage === 1 && publishedArticles.length > 0 ? publishedArticles[0] : null;
+
+  const paginatedArticles = isCardsHeroMode
+    ? (currentPage === 1
+        ? publishedArticles.slice(1, ARTICLES_PER_PAGE)
+        : publishedArticles.slice((currentPage - 1) * ARTICLES_PER_PAGE, currentPage * ARTICLES_PER_PAGE))
+    : publishedArticles.slice((currentPage - 1) * ARTICLES_PER_PAGE, currentPage * ARTICLES_PER_PAGE);
 
   // Aggregator Interaction Handlers
   const handleToggleUpvote = (id) => {
@@ -167,7 +286,7 @@ export function App() {
 
   const handleOpenAdmin = () => {
     if (isAdminLoggedIn) {
-      setViewMode('admin');
+      handleSwitchView('admin');
     } else {
       setIsAdminModalOpen(true);
     }
@@ -177,13 +296,13 @@ export function App() {
     setAuthStatus(true);
     setIsAdminLoggedIn(true);
     setIsAdminModalOpen(false);
-    setViewMode('admin');
+    handleSwitchView('admin');
   };
 
   const handleAdminLogout = () => {
     setAuthStatus(false);
     setIsAdminLoggedIn(false);
-    setViewMode('blog');
+    handleSwitchView('blog');
   };
 
   const handleUpdateStatus = (id, newStatus) => {
@@ -231,7 +350,7 @@ export function App() {
           onArticleCreated={handleArticleCreated}
           onOpenArticle={handleOpenArticle}
           onLogout={handleAdminLogout}
-          onBackToBlog={() => setViewMode('blog')}
+          onBackToBlog={() => handleSwitchView('blog')}
         />
       ) : (
         /* Otherwise render Live Public Blog */
@@ -245,6 +364,7 @@ export function App() {
             onSearchChange={setSearchQuery}
             onOpenAdmin={handleOpenAdmin}
             isAdminLoggedIn={isAdminLoggedIn}
+            onLogout={handleAdminLogout}
             theme={theme}
             onToggleTheme={toggleTheme}
             viewMode={feedViewMode}
@@ -263,8 +383,8 @@ export function App() {
             }} className="aggregator-layout">
               {/* Left Column: Feed Content */}
               <div>
-                {/* Hero Featured Article (Cards mode only) */}
-                {feedViewMode === VIEW_MODES.CARDS && featuredArticle && selectedCategory === 'All' && !searchQuery.trim() && (
+                {/* Hero Featured Article (Cards mode only on Page 1) */}
+                {featuredArticle && (
                   <HeroArticle
                     article={featuredArticle}
                     onSelectArticle={handleOpenArticle}
@@ -272,10 +392,10 @@ export function App() {
                   />
                 )}
 
-                {/* Render Feed based on View Mode */}
+                {/* Render Feed based on View Mode (Paginated: 20 per page) */}
                 {feedViewMode === VIEW_MODES.FARK_LIST ? (
                   <FarkCompactFeed
-                    articles={publishedArticles}
+                    articles={paginatedArticles}
                     onSelectArticle={handleOpenArticle}
                     onToggleUpvote={handleToggleUpvote}
                     onToggleBookmark={handleToggleBookmark}
@@ -284,7 +404,7 @@ export function App() {
                   />
                 ) : (
                   <ArticleGrid
-                    articles={gridArticles.length > 0 && selectedCategory === 'All' && !searchQuery.trim() ? gridArticles : publishedArticles}
+                    articles={paginatedArticles}
                     onSelectArticle={handleOpenArticle}
                     onToggleUpvote={handleToggleUpvote}
                     onToggleBookmark={handleToggleBookmark}
@@ -292,6 +412,14 @@ export function App() {
                     onOpenAuthorModal={handleOpenAuthorModal}
                   />
                 )}
+
+                {/* 20 Articles Per Page Pagination Bar */}
+                <Pagination
+                  currentPage={currentPage}
+                  totalItems={publishedArticles.length}
+                  pageSize={ARTICLES_PER_PAGE}
+                  onPageChange={setCurrentPage}
+                />
               </div>
 
               {/* Right Column: Daily.dev Sidebar Widgets & Ad Unit */}
@@ -411,6 +539,63 @@ export function App() {
         articles={publishedArticles}
         onSelectArticle={handleOpenArticle}
       />
+      {/* Autonomous Article Live Publication Toast */}
+      {autoPublishedToast && (
+        <div style={{
+          position: 'fixed',
+          bottom: '1.5rem',
+          right: '1.5rem',
+          zIndex: 999,
+          backgroundColor: '#0f172a',
+          border: '1.5px solid #10b981',
+          borderRadius: '16px',
+          padding: '1rem 1.25rem',
+          boxShadow: '0 12px 35px rgba(16, 185, 129, 0.35)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.85rem',
+          maxWidth: '440px',
+          backdropFilter: 'blur(16px)',
+          animation: 'fadeIn 0.3s ease'
+        }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: '11px',
+            background: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
+          }}>
+            <span style={{ fontSize: '1.2rem' }}>⚡</span>
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '0.72rem', fontWeight: '800', color: '#10b981', letterSpacing: '0.04em' }}>
+              AUTONOMOUS ARTICLE PUBLISHED
+            </div>
+            <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'white', marginTop: '0.15rem', lineHeight: '1.3' }}>
+              {autoPublishedToast.title}
+            </div>
+          </div>
+          <button
+            onClick={() => { handleOpenArticle(autoPublishedToast); setAutoPublishedToast(null); }}
+            style={{
+              background: 'rgba(16, 185, 129, 0.18)',
+              border: '1px solid rgba(16, 185, 129, 0.4)',
+              color: '#34d399',
+              padding: '0.45rem 0.85rem',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '0.8rem',
+              fontWeight: '700',
+              flexShrink: 0
+            }}
+          >
+            Read
+          </button>
+        </div>
+      )}
     </div>
   );
 }

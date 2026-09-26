@@ -1,0 +1,20 @@
+name = "the-vanguard"
+compatibility_date = "2024-09-23"
+pages_build_output_dir = "dist"
+
+# ====================================================================
+# CLOUDFLARE D1 RELATIONAL DATABASE BINDING
+# ====================================================================
+# To link your Cloudflare D1 database:
+# 1. Run: npx wrangler d1 create the_vanguard_db
+# 2. Paste the generated database_id below:
+# ====================================================================
+
+[[d1_databases]]
+binding = "DB"
+database_name = "the_vanguard_db"
+database_id = "your-d1-database-id-here"
+
+[vars]
+ENVIRONMENT = "production"
+APP_NAME = "THE VANGUARD JOURNAL"

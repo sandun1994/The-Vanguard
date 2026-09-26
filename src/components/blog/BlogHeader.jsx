@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, Shield, Search, Sun, Moon, LayoutGrid, List, PlusCircle, LogIn } from 'lucide-react';
+import { Sparkles, Shield, ShieldCheck, Search, Sun, Moon, LayoutGrid, List, PlusCircle, LogIn, LogOut } from 'lucide-react';
 import { CATEGORIES, VIEW_MODES } from '../../types/blog';
 
 export const BlogHeader = ({
@@ -11,6 +11,7 @@ export const BlogHeader = ({
   onSearchChange,
   onOpenAdmin,
   isAdminLoggedIn,
+  onLogout,
   theme,
   onToggleTheme,
   viewMode,
@@ -155,20 +156,65 @@ export const BlogHeader = ({
             {theme === 'dark' ? <Sun size={18} color="#f59e0b" /> : <Moon size={18} color="#6366f1" />}
           </button>
 
-          <button
-            onClick={onOpenAdmin}
-            className="btn-primary"
-            style={{
-              padding: '0.55rem 1.1rem',
-              fontSize: '0.85rem',
-              background: isAdminLoggedIn
-                ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
-                : 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)'
-            }}
-          >
-            {isAdminLoggedIn ? <Shield size={16} /> : <LogIn size={16} />}
-            {isAdminLoggedIn ? 'Admin' : 'Login'}
-          </button>
+          {isAdminLoggedIn ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+              <button
+                onClick={onOpenAdmin}
+                className="btn-primary"
+                title="Active Admin Session - Return to Admin Control Board"
+                style={{
+                  padding: '0.55rem 1rem',
+                  fontSize: '0.85rem',
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  boxShadow: '0 2px 10px rgba(16, 185, 129, 0.35)',
+                  cursor: 'pointer'
+                }}
+              >
+                <ShieldCheck size={16} /> Admin Dashboard
+              </button>
+              {onLogout && (
+                <button
+                  onClick={onLogout}
+                  title="Logout Admin Session"
+                  style={{
+                    backgroundColor: 'rgba(244, 63, 94, 0.12)',
+                    border: '1px solid rgba(244, 63, 94, 0.3)',
+                    color: '#f43f5e',
+                    padding: '0.55rem 0.65rem',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '0.82rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <LogOut size={15} />
+                </button>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={onOpenAdmin}
+              className="btn-primary"
+              title="Admin Login (Password Required)"
+              style={{
+                padding: '0.55rem 1.1rem',
+                fontSize: '0.85rem',
+                background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                cursor: 'pointer'
+              }}
+            >
+              <LogIn size={16} /> Admin Login
+            </button>
+          )}
         </div>
       </div>
 
