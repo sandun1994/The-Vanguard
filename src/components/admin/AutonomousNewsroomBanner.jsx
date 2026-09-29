@@ -19,13 +19,14 @@ import {
 } from '../../services/autonomousEngine';
 
 export const AutonomousNewsroomBanner = ({
-  governanceMode,
+  governanceMode: propGovMode,
   settings,
   onSaveSettings,
   onOpenArticle,
   onGoToSettings
 }) => {
   const [engineState, setEngineState] = useState(getAutonomousEngineState());
+  const governanceMode = propGovMode || settings?.governanceMode || 'autonomous';
   const [isExecutingNow, setIsExecutingNow] = useState(false);
   const [timeRemainingStr, setTimeRemainingStr] = useState('');
 
@@ -38,7 +39,7 @@ export const AutonomousNewsroomBanner = ({
 
   // Countdown timer calculation
   useEffect(() => {
-    if (governanceMode !== 'autonomous') {
+    if (currentGovernanceMode !== 'autonomous') {
       setTimeRemainingStr('Engine Paused (Manual Mode)');
       return;
     }
@@ -72,7 +73,8 @@ export const AutonomousNewsroomBanner = ({
     }
   };
 
-  const isAutonomous = governanceMode === 'autonomous';
+  const currentGovernanceMode = governanceMode || settings?.governanceMode || 'autonomous';
+  const isAutonomous = currentGovernanceMode === 'autonomous';
 
   return (
     <div className="glass-panel" style={{

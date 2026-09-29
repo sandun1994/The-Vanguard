@@ -280,7 +280,7 @@ export const MetricsAnalytics = ({ metrics, articlesCount, articles = [], onOpen
                             {art.title}
                           </div>
                           <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                            ID: {art.id} • Published {new Date(art.publishedAt || Date.now()).toLocaleDateString()}
+                            ID: {art.id} • Published {art.publishedAt ? new Date(art.publishedAt).toLocaleDateString() : 'Recent'}
                           </div>
                         </div>
                       </div>

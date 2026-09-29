@@ -57,9 +57,38 @@ export const PipelineRunner = ({ topics = [], onArticleCreated, onOpenArticle, i
     <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.75rem' }}>
       {/* Top Configuration Card */}
       <div className="glass-panel" style={{ padding: '1.75rem', borderRadius: '16px' }}>
+        {/* Workflow Clarification Banner */}
+        <div style={{
+          backgroundColor: 'rgba(99, 102, 241, 0.08)',
+          border: '1px solid rgba(99, 102, 241, 0.25)',
+          borderRadius: '12px',
+          padding: '0.85rem 1.15rem',
+          marginBottom: '1.25rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem',
+          fontSize: '0.83rem',
+          color: 'var(--text-secondary)'
+        }}>
+          <div style={{
+            width: '32px',
+            height: '32px',
+            borderRadius: '8px',
+            backgroundColor: 'rgba(99, 102, 241, 0.18)',
+            color: '#6366f1',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: '800',
+            flexShrink: 0
+          }}>✍️</div>
+          <div>
+            <strong style={{ color: 'var(--text-primary)' }}>Manual On-Demand Generation Mode:</strong> Use this tab to manually craft a single article for any custom topic or keyword. For <strong>100% automated hands-free auto-publishing</strong> from Google Trends, enable <strong>Autonomous Mode</strong> in the top header banner!
+          </div>
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
           <h3 style={{ fontSize: '1.2rem', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
-            <Sparkles size={20} color="#6366f1" /> Autonomous Multi-Agent Discovery & Generation Trigger
+            <Sparkles size={20} color="#6366f1" /> On-Demand Article Generator & Custom Topic Pipeline
           </h3>
           {onOpenTrendsRadar && (
             <button

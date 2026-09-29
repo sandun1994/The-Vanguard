@@ -177,7 +177,7 @@ export const AdminDashboard = ({
           {[
             { id: 'queue', label: 'Content Queue & Articles', icon: Layers, count: pendingCount ? `${pendingCount} Pending` : null },
             { id: 'trends', label: 'Google Keyword Radar', icon: Flame, isBreakout: true },
-            { id: 'runner', label: 'Multi-Agent Pipeline Runner', icon: Play },
+            { id: 'runner', label: 'On-Demand Article Writer', icon: Play },
             { id: 'settings', label: 'Prompts & Governance Settings', icon: Settings },
             { id: 'metrics', label: 'Visitor Analytics & Traffic Metrics', icon: Activity },
             { id: 'account', label: 'Admin Security & Login Credentials', icon: KeyRound }
@@ -228,6 +228,7 @@ export const AdminDashboard = ({
       {/* Main Admin Dashboard Body */}
       <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '2rem 1.5rem' }}>
         <AutonomousNewsroomBanner
+          governanceMode={settings.governanceMode}
           settings={settings}
           onSaveSettings={onSaveSettings}
           onOpenArticle={onOpenArticle}

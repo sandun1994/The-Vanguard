@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Save, Bot, Key, Settings, Plus, Trash2, Shield, Check, Sparkles, Globe, Zap } from 'lucide-react';
+import { Save, Bot, Key, Settings, Plus, Trash2, Shield, Check, Globe, Zap } from 'lucide-react';
 import { DEFAULT_GOVERNANCE_MODE } from '../../types/blog';
 
 export const AgentSettings = ({ settings, onSaveSettings }) => {
+
   const [siteName, setSiteName] = useState(settings.siteName || 'NOVUM');
   const [siteTagline, setSiteTagline] = useState(settings.siteTagline || 'AI JOURNAL');
   const [prompts, setPrompts] = useState(settings.prompts || {});
@@ -13,6 +14,19 @@ export const AgentSettings = ({ settings, onSaveSettings }) => {
   const [apiKeys, setApiKeys] = useState(settings.apiKeys || {});
   const [newTopic, setNewTopic] = useState('');
   const [savedSuccess, setSavedSuccess] = useState(false);
+
+  React.useEffect(() => {
+    if (settings) {
+      setGovernanceMode(settings.governanceMode || 'autonomous');
+      setSiteName(settings.siteName || 'THE VANGUARD');
+      setSiteTagline(settings.siteTagline || 'JOURNAL OF DISCOVERY');
+      if (settings.prompts) setPrompts(settings.prompts);
+      if (settings.topics) setTopics(settings.topics);
+      if (settings.autonomousFrequencyMinutes) setAutonomousFrequencyMinutes(settings.autonomousFrequencyMinutes);
+      if (settings.autonomousSourceStrategy) setAutonomousSourceStrategy(settings.autonomousSourceStrategy);
+      if (settings.apiKeys) setApiKeys(settings.apiKeys);
+    }
+  }, [settings]);
 
   const getTopicLabel = (t) => (typeof t === 'string' ? t : t?.query || '');
 
