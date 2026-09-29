@@ -56,7 +56,7 @@ async function handleUpdate(context) {
 
     if (currentPassword) {
       const currentInputHash = await hashPassword(currentPassword.trim());
-      const isValidCurrent = currentInputHash === currentAuth.passwordHash || (currentPassword.trim() === 'admin123' || currentPassword.trim() === 'admin');
+      const isValidCurrent = currentInputHash === currentAuth.passwordHash;
       if (!isValidCurrent) {
         return jsonResponse({ success: false, error: 'Current password verification failed.' }, 403);
       }

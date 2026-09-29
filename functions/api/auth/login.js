@@ -59,7 +59,7 @@ export async function onRequestPost(context) {
     const inputHash = await hashPassword(inputPass);
 
     const isUserValid = inputUser === authData.username.toLowerCase();
-    const isPasswordValid = inputHash === authData.passwordHash || inputPass === 'admin123' || inputPass === 'admin';
+    const isPasswordValid = inputHash === authData.passwordHash;
 
     if (isUserValid && isPasswordValid) {
       return jsonResponse({
