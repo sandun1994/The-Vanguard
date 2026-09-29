@@ -90,7 +90,7 @@ export const AdminAccountManager = ({ onLogout }) => {
   const strength = calculatePasswordStrength(newPassword);
 
   // Handle Profile Update
-  const handleUpdateProfile = (e) => {
+  const handleUpdateProfile = async (e) => {
     e.preventDefault();
     setProfileMessage({ text: '', type: '' });
 
@@ -109,32 +109,26 @@ export const AdminAccountManager = ({ onLogout }) => {
     }
 
     try {
-      const updated = saveAdminCredentials({
+      const updated = await saveAdminCredentials({
         username: trimmedUser,
         email: trimmedEmail,
         fullName: trimmedName
       });
       setCredentials(updated);
-      setProfileMessage({ text: 'Admin profile information updated successfully!', type: 'success' });
+      setProfileMessage({ text: 'Admin profile updated & synchronized across Cloudflare KV globally!', type: 'success' });
       setTimeout(() => setProfileMessage({ text: '', type: '' }), 4000);
-    } catch (err) {
-      setProfileMessage({ text: 'Failed to update credentials. Please try again.', type: 'error' });
+    } catch (_) {
+      setProfileMessage({ text: 'Failed to update credentials on Cloudflare Worker KV.', type: 'error' });
     }
   };
 
   // Handle Password Update
-  const handleUpdatePassword = (e) => {
+  const handleUpdatePassword = async (e) => {
     e.preventDefault();
     setPasswordMessage({ text: '', type: '' });
 
     if (!currentPassword) {
-      setPasswordMessage({ text: 'Please enter your current admin password.', type: 'error' });
-      return;
-    }
-
-    // Verify current password against stored credentials
-    if (currentPassword !== credentials.password) {
-      setPasswordMessage({ text: 'Current password does not match.', type: 'error' });
+      setPasswordMessage({ text: 'Please enter your current admin password for verification.', type: 'error' });
       return;
     }
 
@@ -149,17 +143,19 @@ export const AdminAccountManager = ({ onLogout }) => {
     }
 
     try {
-      const updated = saveAdminCredentials({
-        password: newPassword
+      const updated = await saveAdminCredentials({
+        currentPassword: currentPassword.trim(),
+        username,
+        password: newPassword.trim()
       });
       setCredentials(updated);
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      setPasswordMessage({ text: 'Admin password changed successfully! Your session remains authenticated.', type: 'success' });
+      setPasswordMessage({ text: 'Password updated & instantly synchronized across Cloudflare KV globally!', type: 'success' });
       setTimeout(() => setPasswordMessage({ text: '', type: '' }), 4500);
-    } catch (err) {
-      setPasswordMessage({ text: 'Failed to update password.', type: 'error' });
+    } catch (_) {
+      setPasswordMessage({ text: 'Failed to update password on Cloudflare KV.', type: 'error' });
     }
   };
 

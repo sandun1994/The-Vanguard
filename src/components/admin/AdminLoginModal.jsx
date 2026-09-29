@@ -7,6 +7,7 @@ export const AdminLoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -20,14 +21,23 @@ export const AdminLoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const result = verifyAdminCredentials(username, password);
-    if (result.success) {
-      onLoginSuccess();
-      setError('');
-    } else {
-      setError(result.message || 'Invalid admin username or password.');
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      const result = await verifyAdminCredentials(username, password);
+      if (result.success) {
+        onLoginSuccess();
+        setError('');
+      } else {
+        setError(result.message || 'Invalid admin username or password.');
+      }
+    } catch (err) {
+      setError('Serverless authentication failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -211,8 +221,8 @@ export const AdminLoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
             </div>
           </div>
 
-          <button type="submit" className="btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '0.5rem', padding: '0.75rem' }}>
-            <Lock size={16} /> Authenticate Admin Session
+          <button type="submit" disabled={isSubmitting} className="btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '0.5rem', padding: '0.75rem', opacity: isSubmitting ? 0.7 : 1 }}>
+            <Lock size={16} /> {isSubmitting ? 'Authenticating via Cloudflare Worker...' : 'Authenticate Admin Session'}
           </button>
         </form>
 

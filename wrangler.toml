@@ -18,3 +18,11 @@ database_id = "bdb7138f-b151-4c3b-af16-7013dc936b8a"
 [vars]
 ENVIRONMENT = "production"
 APP_NAME = "THE VANGUARD JOURNAL"
+
+
+# ====================================================================
+# CLOUDFLARE KV NAMESPACE AUTH BINDING
+# ====================================================================
+[[kv_namespaces]]
+binding = "VANGUARD_AUTH_KV"
+id = "vanguard_auth_kv_production_id"

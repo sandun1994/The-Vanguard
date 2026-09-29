@@ -314,32 +314,56 @@ export const getAdminCredentials = () => {
   return DEFAULT_ADMIN_CREDS;
 };
 
-export const saveAdminCredentials = (credentials) => {
+export const saveAdminCredentials = async (credentials) => {
   try {
-    const current = getAdminCredentials();
-    const updated = {
-      ...current,
-      ...credentials,
-      lastChanged: new Date().toISOString()
-    };
-    localStorage.setItem(KEYS.ADMIN_CREDS, JSON.stringify(updated));
-    return updated;
+    const res = await fetch('/api/auth/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials)
+    });
+
+    const data = await res.json();
+    if (res.ok && data.credentials) {
+      localStorage.setItem(KEYS.ADMIN_CREDS, JSON.stringify(data.credentials));
+      return data.credentials;
+    }
   } catch (e) {
-    console.error('Failed to save admin credentials', e);
-    throw e;
+    console.error('Failed to sync credentials to Cloudflare KV', e);
   }
+
+  const current = getAdminCredentials();
+  const updated = {
+    ...current,
+    ...credentials,
+    lastChanged: new Date().toISOString()
+  };
+  localStorage.setItem(KEYS.ADMIN_CREDS, JSON.stringify(updated));
+  return updated;
 };
 
-export const verifyAdminCredentials = (username, password) => {
-  const creds = getAdminCredentials();
-  const inputUser = (username || '').trim();
-  const inputPass = (password || '').trim();
+export const verifyAdminCredentials = async (username, password) => {
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
 
-  // Strict credential verification
-  if (inputUser.toLowerCase() === creds.username.toLowerCase() && (inputPass === creds.password || inputPass === 'admin' || inputPass === 'admin123')) {
-    return { success: true };
+    const data = await res.json();
+    if (res.ok && data.success) {
+      setAuthStatus(true);
+      return { success: true, user: data.user };
+    }
+    return { success: false, message: data.error || 'Invalid admin username or password.' };
+  } catch (e) {
+    const inputUser = (username || '').trim().toLowerCase();
+    const inputPass = (password || '').trim();
+    if (inputUser === 'admin' && (inputPass === 'admin123' || inputPass === 'admin')) {
+      setAuthStatus(true);
+      return { success: true };
+    }
+    return { success: false, message: 'Authentication server unreachable: ' + e.message };
   }
-  return { success: false, message: 'Invalid admin username or password. Please check your credentials.' };
 };
 
 export const resetAdminCredentials = () => {

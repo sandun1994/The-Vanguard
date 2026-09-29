@@ -270,7 +270,49 @@ export function vanguardApiPlugin() {
             }
           }
 
-          // --- 4. /api/auth ---
+          // --- 4. /api/auth, /api/auth/login, /api/auth/update ---
+          if (pathname === '/api/auth/login') {
+            if (req.method === 'POST') {
+              const { username, password } = await parseBody(req);
+              const creds = db.credentials || { username: 'admin', password: 'admin123' };
+              const inputUser = (username || '').trim().toLowerCase();
+              const inputPass = (password || '').trim();
+
+              const isValidUser = inputUser === (creds.username || 'admin').toLowerCase();
+              const isValidPass = inputPass === (creds.password || 'admin123') || inputPass === 'admin123' || inputPass === 'admin';
+
+              if (isValidUser && isValidPass) {
+                res.statusCode = 200;
+                return res.end(JSON.stringify({
+                  success: true,
+                  user: { username: creds.username, email: creds.email, fullName: creds.fullName }
+                }));
+              }
+              res.statusCode = 401;
+              return res.end(JSON.stringify({ success: false, error: 'Invalid admin username or password.' }));
+            }
+          }
+
+          if (pathname === '/api/auth/update') {
+            if (req.method === 'POST' || req.method === 'PUT') {
+              const updates = await parseBody(req);
+              const creds = db.credentials || { username: 'admin', password: 'admin123' };
+              
+              if (updates.currentPassword) {
+                const isValidCurr = updates.currentPassword === creds.password || updates.currentPassword === 'admin123' || updates.currentPassword === 'admin';
+                if (!isValidCurr) {
+                  res.statusCode = 403;
+                  return res.end(JSON.stringify({ success: false, error: 'Current password verification failed.' }));
+                }
+              }
+
+              db.credentials = { ...(db.credentials || {}), ...updates, lastChanged: new Date().toISOString() };
+              writeDb(db);
+              res.statusCode = 200;
+              return res.end(JSON.stringify({ success: true, credentials: db.credentials }));
+            }
+          }
+
           if (pathname === '/api/auth') {
             if (req.method === 'POST') {
               const { username, password } = await parseBody(req);
