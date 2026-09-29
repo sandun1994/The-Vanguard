@@ -14,17 +14,16 @@ const KEYS = {
 export const getArticles = () => {
   try {
     const saved = localStorage.getItem(KEYS.ARTICLES);
-    if (saved) {
+    if (saved !== null) {
       const parsed = JSON.parse(saved);
-      // Ensure at least 25 seed articles are present across categories
-      if (Array.isArray(parsed) && parsed.length >= 25) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     }
   } catch (e) {
     console.error('Failed to read articles from localStorage', e);
   }
-  // Save default initial state of 25 comprehensive articles if empty/outdated
+  // Save default initial state of comprehensive articles if empty
   localStorage.setItem(KEYS.ARTICLES, JSON.stringify(DEFAULT_ARTICLES));
   return DEFAULT_ARTICLES;
 };

@@ -69,50 +69,60 @@ export const subscribeAutonomousEngine = (callback) => {
  */
 export const findNextUnpublishedTrend = async () => {
   const existingArticles = getArticles();
-  const existingTitles = existingArticles.map(a => a.title.toLowerCase());
-  const existingSlugs = existingArticles.map(a => a.slug.toLowerCase());
 
-  // 1. Check Today's Breakouts
+  // Helper: Token overlap checker to prevent duplicate article topics
+  const isTopicAlreadyCovered = (topicStr) => {
+    if (!topicStr) return false;
+    const cleanWords = (str) => str.toLowerCase().replace(/[^a-z0-9]/g, ' ').split(/\s+/).filter(w => w.length > 3);
+    const targetWords = cleanWords(topicStr);
+    if (targetWords.length === 0) return false;
+
+    return existingArticles.some(article => {
+      const articleWords = cleanWords((article.title || '') + ' ' + (article.summary || ''));
+      const matches = targetWords.filter(w => articleWords.includes(w));
+      return (matches.length / targetWords.length) >= 0.5;
+    });
+  };
+
+  // 1. Check Admin-configured Scheduled Topic Queries from Settings first
+  const settings = getSettings();
+  if (settings.topics && Array.isArray(settings.topics)) {
+    const activeTopics = settings.topics.filter(t => t.active !== false);
+    for (const top of activeTopics) {
+      if (top.query && !isTopicAlreadyCovered(top.query)) {
+        return await analyzeSearchPattern(top.query);
+      }
+    }
+  }
+
+  // 2. Check Today's Breakouts from Trends Service
   const todayTrends = getTrendingKeywords({ timeframe: 'today' });
   for (const trend of todayTrends) {
-    const kw = trend.keyword.toLowerCase();
-    const alreadyWritten = existingTitles.some(t => t.includes(kw) || kw.includes(t)) ||
-                           existingSlugs.some(s => s.includes(trend.keyword.toLowerCase().slice(0, 15)));
-    if (!alreadyWritten) {
+    if (!isTopicAlreadyCovered(trend.keyword)) {
       return trend;
     }
   }
 
-  // 2. Check This Week's Rising Trends
+  // 3. Check This Week's & Month's Rising Trends
   const weekTrends = getTrendingKeywords({ timeframe: 'week' });
   for (const trend of weekTrends) {
-    const kw = trend.keyword.toLowerCase();
-    const alreadyWritten = existingTitles.some(t => t.includes(kw) || kw.includes(t));
-    if (!alreadyWritten) {
+    if (!isTopicAlreadyCovered(trend.keyword)) {
       return trend;
     }
   }
 
-  // 3. Fallback: Select an emerging topic from the rotating pool and analyze search patterns dynamically
+  // 4. Fallback: Select an emerging topic from the rotating pool
   for (const topic of ROTATING_EMERGING_TOPICS) {
-    const kw = topic.toLowerCase();
-    const alreadyWritten = existingTitles.some(t => t.includes(kw));
-    if (!alreadyWritten) {
+    if (!isTopicAlreadyCovered(topic)) {
       return await analyzeSearchPattern(topic);
     }
   }
 
-  // 4. Default fresh timestamped innovation if all are written
-  return await analyzeSearchPattern(`Autonomous Breakthrough Discovery ${new Date().toLocaleDateString()}`);
+  // 5. Dynamic timestamped innovation fallback ensuring infinite non-duplicating topics
+  const randomId = Math.floor(Math.random() * 9000 + 1000);
+  return await analyzeSearchPattern(`Autonomous Scientific Breakthrough Discovery Vol-${randomId}`);
 };
 
-/**
- * Executes a single complete autonomous cycle:
- * 1. Scans Google keyword trends
- * 2. Selects breakout pattern
- * 3. Runs 5-stage agent newsroom
- * 4. Publishes directly to live blog
- */
 export const executeAutonomousNewsroomCycle = async (onStepProgress = () => {}) => {
   if (currentRunningPromise) {
     return currentRunningPromise;
