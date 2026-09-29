@@ -27,6 +27,7 @@ import { FarkCompactFeed } from './components/blog/FarkCompactFeed';
 import { SidebarWidgets } from './components/blog/SidebarWidgets';
 import { Pagination } from './components/blog/Pagination';
 import { ArticleDetailModal } from './components/blog/ArticleDetailModal';
+import { ArticleReaderPage } from './components/blog/ArticleReaderPage';
 import { CommentsDrawer } from './components/blog/CommentsDrawer';
 import { SubmitLinkModal } from './components/blog/SubmitLinkModal';
 import { LegalPagesModal } from './components/common/LegalPagesModal';
@@ -372,7 +373,17 @@ export function App() {
             onOpenSubmitModal={() => setIsSubmitModalOpen(true)}
           />
 
-          <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1.5rem 4rem 1.5rem' }}>
+          {selectedArticle ? (
+            /* Dedicated Full-Page Article Reader Layout (No Modal backdrop) */
+            <ArticleReaderPage
+              article={selectedArticle}
+              allArticles={publishedArticles}
+              onBack={() => setSelectedArticle(null)}
+              onSelectArticle={handleOpenArticle}
+              onOpenAuthorModal={handleOpenAuthorModal}
+            />
+          ) : (
+            <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1.5rem 4rem 1.5rem' }}>
             {/* Split layout: Main Feed on Left, Daily.dev Sidebar Widgets on Right */}
             <div style={{
               display: 'grid',
@@ -436,6 +447,7 @@ export function App() {
               </div>
             </div>
           </main>
+          )}
 
           {/* Footer */}
           <footer style={{
