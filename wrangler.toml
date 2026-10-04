@@ -25,4 +25,4 @@ APP_NAME = "THE VANGUARD JOURNAL"
 # ====================================================================
 [[kv_namespaces]]
 binding = "VANGUARD_AUTH_KV"
-id = "vanguard_auth_kv_production_id"
+id = "379786b3124c473d96e0911246a97766"
