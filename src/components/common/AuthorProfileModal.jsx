@@ -22,12 +22,12 @@ export const AuthorProfileModal = ({ isOpen, onClose, authorName = 'Sandun Hewaw
       display: 'flex',
       alignItems: 'center',
       justify: 'center',
-      padding: '1.5rem',
+      padding: '1rem',
       overflowY: 'auto'
     }}>
       <div className="glass-panel" style={{
         maxWidth: '850px',
-        width: '100%',
+        width: '94vw',
         maxHeight: '90vh',
         backgroundColor: 'var(--bg-card)',
         borderRadius: '24px',
@@ -61,7 +61,7 @@ export const AuthorProfileModal = ({ isOpen, onClose, authorName = 'Sandun Hewaw
 
         {/* Header Profile Section */}
         <div style={{
-          padding: '2.5rem 2.5rem 1.5rem 2.5rem',
+          padding: '1.75rem 1.5rem 1.25rem 1.5rem',
           background: 'linear-gradient(180deg, rgba(99, 102, 241, 0.12) 0%, rgba(0, 0, 0, 0) 100%)',
           borderBottom: '1px solid var(--border-subtle)',
           display: 'flex',

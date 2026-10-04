@@ -383,7 +383,7 @@ export function App() {
               onOpenAuthorModal={handleOpenAuthorModal}
             />
           ) : (
-            <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1.5rem 4rem 1.5rem' }}>
+            <main className="main-content-padding" style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1.5rem 4rem 1.5rem' }}>
             {/* Split layout: Main Feed on Left, Daily.dev Sidebar Widgets on Right */}
             <div style={{
               display: 'grid',

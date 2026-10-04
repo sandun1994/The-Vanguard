@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, ArrowRight, BookOpen, ExternalLink, ShieldCheck } from 'lucide-react';
+import { Clock, ArrowRight, BookOpen, ShieldCheck } from 'lucide-react';
 import { CategoryBadge } from '../common/Badge';
 
 export const HeroArticle = ({ article, onSelectArticle, onOpenAuthorModal }) => {
@@ -15,16 +15,16 @@ export const HeroArticle = ({ article, onSelectArticle, onOpenAuthorModal }) => 
         cursor: 'pointer',
         border: '1px solid var(--border-glow)',
         backgroundColor: 'var(--bg-card)',
-        margin: '2rem 0'
+        margin: '1.5rem 0'
       }}
     >
-      <div style={{
+      <div className="hero-article-grid" style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
         alignItems: 'center'
       }}>
         {/* Left Column: Image */}
-        <div style={{ position: 'relative', height: '360px', overflow: 'hidden' }}>
+        <div className="hero-article-image" style={{ position: 'relative', height: '360px', overflow: 'hidden' }}>
           <img
             src={article.coverImage}
             alt={article.title}
@@ -45,7 +45,8 @@ export const HeroArticle = ({ article, onSelectArticle, onOpenAuthorModal }) => 
             top: '1rem',
             left: '1rem',
             display: 'flex',
-            gap: '0.5rem'
+            gap: '0.5rem',
+            flexWrap: 'wrap'
           }}>
             <CategoryBadge category={article.category} />
             <span style={{
@@ -66,12 +67,12 @@ export const HeroArticle = ({ article, onSelectArticle, onOpenAuthorModal }) => 
         </div>
 
         {/* Right Column: Details */}
-        <div style={{ padding: '2.2rem 2.5rem', display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+        <div className="hero-article-body" style={{ padding: '2.2rem 2.5rem', display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.65rem', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
             <span
               onClick={(e) => { e.stopPropagation(); if (onOpenAuthorModal) onOpenAuthorModal(article.author); }}
               style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#6366f1', fontWeight: '700', cursor: 'pointer' }}
-              title="Click to view Sandun Hewawasam Author Profile & Bio"
+              title="Click to view Author Profile & Bio"
             >
               <BookOpen size={15} /> {article.author || 'Sandun Hewawasam, Senior Tech Editor'}
             </span>
@@ -83,11 +84,11 @@ export const HeroArticle = ({ article, onSelectArticle, onOpenAuthorModal }) => 
             <span>{new Date(article.publishedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
           </div>
 
-          <h2 style={{ fontSize: '1.85rem', fontWeight: '800', lineHeight: 1.25, color: 'var(--text-primary)' }}>
+          <h2 className="hero-article-title" style={{ fontSize: '1.85rem', fontWeight: '800', lineHeight: 1.25, color: 'var(--text-primary)' }}>
             {article.title}
           </h2>
 
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.6 }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', lineHeight: 1.6 }}>
             {article.summary}
           </p>
 
@@ -106,7 +107,7 @@ export const HeroArticle = ({ article, onSelectArticle, onOpenAuthorModal }) => 
             </div>
           )}
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyBetween: 'space-between', marginTop: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginTop: '0.5rem' }}>
             <button className="btn-primary" style={{ fontSize: '0.85rem' }}>
               Read Research Report <ArrowRight size={16} />
             </button>

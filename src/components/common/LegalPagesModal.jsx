@@ -46,12 +46,12 @@ export const LegalPagesModal = ({ isOpen, onClose, initialTab = 'privacy' }) => 
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '1.5rem',
+      padding: '1rem',
       overflowY: 'auto'
     }}>
       <div style={{
         maxWidth: '900px',
-        width: '100%',
+        width: '94vw',
         maxHeight: '90vh',
         backgroundColor: 'var(--bg-card)',
         borderRadius: '24px',
@@ -117,13 +117,14 @@ export const LegalPagesModal = ({ isOpen, onClose, initialTab = 'privacy' }) => 
         </div>
 
         {/* Custom Tab Navigation Bar */}
-        <div style={{
+        <div className="no-scrollbar" style={{
           display: 'flex',
           borderBottom: '1px solid var(--border-subtle)',
           backgroundColor: 'rgba(9, 13, 22, 0.6)',
-          padding: '0 1.25rem',
+          padding: '0 1rem',
           gap: '0.5rem',
-          overflowX: 'auto'
+          overflowX: 'auto',
+          WebkitOverflowScrolling: 'touch'
         }}>
           {tabs.map((tab) => {
             const Icon = tab.icon;

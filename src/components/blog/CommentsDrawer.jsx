@@ -24,12 +24,12 @@ export const CommentsDrawer = ({ article, onClose, onAddComment }) => {
       backdropFilter: 'blur(12px)',
       display: 'flex',
       alignItems: 'center',
-      justify: 'center',
-      padding: '1.5rem'
+      justifyContent: 'center',
+      padding: '1rem'
     }}>
       <div className="glass-panel" style={{
         maxWidth: '560px',
-        width: '100%',
+        width: '94vw',
         maxHeight: '85vh',
         display: 'flex',
         flexDirection: 'column',
@@ -41,28 +41,28 @@ export const CommentsDrawer = ({ article, onClose, onAddComment }) => {
       }}>
         {/* Drawer Header */}
         <div style={{
-          padding: '1.25rem 1.5rem',
+          padding: '1rem 1.25rem',
           borderBottom: '1px solid var(--border-subtle)',
           display: 'flex',
           alignItems: 'center',
-          justify: 'space-between',
+          justifyContent: 'space-between',
           backgroundColor: 'rgba(99, 102, 241, 0.05)'
         }}>
           <div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: '800', margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <MessageSquare size={18} color="#6366f1" /> Community Discussion
+            <h3 style={{ fontSize: '1.05rem', fontWeight: '800', margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <MessageSquare size={17} color="#6366f1" /> Community Discussion
             </h3>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+            <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>
               {article.comments?.length || 0} Comments on "{article.title}"
             </span>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
-            <X size={20} />
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}>
+            <X size={18} />
           </button>
         </div>
 
         {/* Comments List */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
           {(!article.comments || article.comments.length === 0) ? (
             <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
               No comments yet. Be the first developer to start the discussion!
@@ -73,17 +73,17 @@ export const CommentsDrawer = ({ article, onClose, onAddComment }) => {
                 backgroundColor: 'rgba(255, 255, 255, 0.03)',
                 border: '1px solid var(--border-subtle)',
                 borderRadius: '12px',
-                padding: '0.85rem 1rem'
+                padding: '0.75rem 0.9rem'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
-                  <span style={{ fontWeight: '700', fontSize: '0.85rem', color: '#6366f1', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  <span style={{ fontWeight: '700', fontSize: '0.82rem', color: '#6366f1', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                     <span>{c.avatar || '💬'}</span> {c.author}
                   </span>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
                     {new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
-                <p style={{ fontSize: '0.88rem', color: 'var(--text-primary)', margin: 0, lineHeight: 1.45 }}>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-primary)', margin: 0, lineHeight: 1.45 }}>
                   {c.text}
                 </p>
               </div>
@@ -93,47 +93,49 @@ export const CommentsDrawer = ({ article, onClose, onAddComment }) => {
 
         {/* Add Comment Form */}
         <form onSubmit={handleSubmit} style={{
-          padding: '1.25rem',
+          padding: '1rem',
           borderTop: '1px solid var(--border-subtle)',
           display: 'flex',
           flexDirection: 'column',
-          gap: '0.75rem',
+          gap: '0.65rem',
           backgroundColor: 'rgba(0, 0, 0, 0.1)'
         }}>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             <input
               type="text"
-              placeholder="Your Handle / Name"
+              placeholder="Your Handle"
               value={authorName}
               onChange={(e) => setAuthorName(e.target.value)}
               style={{
-                width: '140px',
+                flex: '1 1 110px',
                 backgroundColor: 'rgba(255, 255, 255, 0.05)',
                 border: '1px solid var(--border-subtle)',
                 borderRadius: '8px',
-                padding: '0.45rem 0.65rem',
+                padding: '0.5rem 0.65rem',
                 color: 'var(--text-primary)',
-                fontSize: '0.8rem'
+                fontSize: '0.8rem',
+                boxSizing: 'border-box'
               }}
             />
             <input
               type="text"
-              placeholder="Add your thoughts or research analysis..."
+              placeholder="Add your thoughts or analysis..."
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               style={{
-                flex: 1,
+                flex: '2 1 180px',
                 backgroundColor: 'rgba(255, 255, 255, 0.05)',
                 border: '1px solid var(--border-subtle)',
                 borderRadius: '8px',
-                padding: '0.45rem 0.65rem',
+                padding: '0.5rem 0.65rem',
                 color: 'var(--text-primary)',
                 fontSize: '0.82rem',
-                outline: 'none'
+                outline: 'none',
+                boxSizing: 'border-box'
               }}
             />
-            <button type="submit" className="btn-primary" style={{ padding: '0.45rem 1rem', fontSize: '0.8rem' }}>
-              <Send size={14} /> Post
+            <button type="submit" className="btn-primary" style={{ padding: '0.5rem 0.9rem', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
+              <Send size={13} /> Post
             </button>
           </div>
         </form>

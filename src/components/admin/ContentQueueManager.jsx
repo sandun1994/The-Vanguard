@@ -41,12 +41,12 @@ export const ContentQueueManager = ({
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        justify: 'space-between',
+        justifyContent: 'space-between',
         marginBottom: '1.5rem',
         flexWrap: 'wrap',
         gap: '1rem'
       }}>
-        <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto' }}>
+        <div className="no-scrollbar" style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', WebkitOverflowScrolling: 'touch', maxWidth: '100%' }}>
           {[
             { id: 'all', label: 'All Articles' },
             { id: ARTICLE_STATUS.PENDING_REVIEW, label: 'Pending Review' },
@@ -58,9 +58,9 @@ export const ContentQueueManager = ({
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               style={{
-                padding: '0.5rem 1rem',
+                padding: '0.45rem 0.85rem',
                 borderRadius: '8px',
-                fontSize: '0.82rem',
+                fontSize: '0.8rem',
                 fontWeight: activeTab === tab.id ? '600' : '500',
                 backgroundColor: activeTab === tab.id ? 'rgba(99, 102, 241, 0.25)' : 'var(--bg-main)',
                 color: activeTab === tab.id ? '#6366f1' : 'var(--text-secondary)',
@@ -68,12 +68,14 @@ export const ContentQueueManager = ({
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.5rem'
+                gap: '0.45rem',
+                whiteSpace: 'nowrap',
+                flexShrink: 0
               }}
             >
               {tab.label}
               <span style={{
-                fontSize: '0.72rem',
+                fontSize: '0.7rem',
                 padding: '1px 6px',
                 borderRadius: '9999px',
                 backgroundColor: activeTab === tab.id ? 'rgba(99, 102, 241, 0.4)' : 'rgba(120, 120, 120, 0.15)',
@@ -88,15 +90,15 @@ export const ContentQueueManager = ({
         <button
           onClick={onTriggerPipeline}
           className="btn-primary"
-          style={{ fontSize: '0.82rem' }}
+          style={{ fontSize: '0.82rem', whiteSpace: 'nowrap' }}
         >
           <Play size={15} /> Trigger Agent Discovery Run
         </button>
       </div>
 
-      {/* Queue Table Container */}
-      <div className="glass-panel" style={{ borderRadius: '16px', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
+      {/* Queue Table Container with Responsive Horizontal Touch Scroll */}
+      <div className="glass-panel table-responsive-wrapper" style={{ borderRadius: '16px' }}>
+        <table style={{ width: '100%', minWidth: '780px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
           <thead>
             <tr style={{ backgroundColor: 'var(--bg-main)', borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}>
               <th style={{ padding: '0.85rem 1.25rem' }}>Article Details</th>
@@ -111,7 +113,7 @@ export const ContentQueueManager = ({
           <tbody>
             {filteredArticles.length === 0 ? (
               <tr>
-                <td colSpan={6} style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                <td colSpan={7} style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
                   No articles found in this queue state.
                 </td>
               </tr>
@@ -287,25 +289,25 @@ export const ContentQueueManager = ({
           backdropFilter: 'blur(16px)',
           display: 'flex',
           alignItems: 'center',
-          justify: 'center',
-          padding: '1.5rem'
+          justifyContent: 'center',
+          padding: '1rem'
         }}>
           <div className="glass-panel" style={{
             maxWidth: '680px',
-            width: '100%',
+            width: '94vw',
             margin: 'auto',
-            maxHeight: '85vh',
+            maxHeight: '88vh',
             overflowY: 'auto',
-            padding: '2rem',
+            padding: '1.5rem',
             borderRadius: '20px',
             backgroundColor: 'var(--bg-card)',
             border: '1px solid var(--border-glow)',
             color: 'var(--text-primary)',
             boxShadow: '0 20px 50px rgba(0,0,0,0.6)'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: '700', color: 'var(--text-primary)' }}>
-                Edit Article Content & Governance State
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+                Edit Article Content & State
               </h3>
               <button onClick={() => setEditingArticle(null)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
                 <X size={20} />
@@ -319,17 +321,17 @@ export const ContentQueueManager = ({
                   type="text"
                   value={editingArticle.title}
                   onChange={(e) => setEditingArticle({ ...editingArticle, title: e.target.value })}
-                  style={{ width: '100%', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '0.65rem', color: 'var(--text-primary)' }}
+                  style={{ width: '100%', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '0.65rem', color: 'var(--text-primary)', boxSizing: 'border-box' }}
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '0.35rem' }}>Category</label>
                   <select
                     value={editingArticle.category}
                     onChange={(e) => setEditingArticle({ ...editingArticle, category: e.target.value })}
-                    style={{ width: '100%', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '0.65rem', color: 'var(--text-primary)' }}
+                    style={{ width: '100%', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '0.65rem', color: 'var(--text-primary)', boxSizing: 'border-box' }}
                   >
                     {CATEGORIES.filter(c => c !== 'All').map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
@@ -342,7 +344,7 @@ export const ContentQueueManager = ({
                   <select
                     value={editingArticle.status}
                     onChange={(e) => setEditingArticle({ ...editingArticle, status: e.target.value })}
-                    style={{ width: '100%', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '0.65rem', color: 'var(--text-primary)' }}
+                    style={{ width: '100%', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '0.65rem', color: 'var(--text-primary)', boxSizing: 'border-box' }}
                   >
                     <option value={ARTICLE_STATUS.PENDING_REVIEW}>Pending Review</option>
                     <option value={ARTICLE_STATUS.APPROVED}>Approved</option>
@@ -358,7 +360,7 @@ export const ContentQueueManager = ({
                   rows={2}
                   value={editingArticle.summary}
                   onChange={(e) => setEditingArticle({ ...editingArticle, summary: e.target.value })}
-                  style={{ width: '100%', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '0.65rem', color: 'var(--text-primary)' }}
+                  style={{ width: '100%', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '0.65rem', color: 'var(--text-primary)', boxSizing: 'border-box' }}
                 />
               </div>
 
@@ -368,11 +370,11 @@ export const ContentQueueManager = ({
                   rows={6}
                   value={editingArticle.content}
                   onChange={(e) => setEditingArticle({ ...editingArticle, content: e.target.value })}
-                  style={{ width: '100%', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '0.65rem', color: 'var(--text-primary)', fontFamily: 'monospace', fontSize: '0.85rem' }}
+                  style={{ width: '100%', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '0.65rem', color: 'var(--text-primary)', fontFamily: 'monospace', fontSize: '0.85rem', boxSizing: 'border-box' }}
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem', flexWrap: 'wrap' }}>
                 <button type="button" onClick={() => setEditingArticle(null)} className="btn-secondary">
                   Cancel
                 </button>

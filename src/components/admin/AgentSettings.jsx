@@ -339,6 +339,17 @@ export const AgentSettings = ({ settings, onSaveSettings }) => {
               style={{ width: '100%', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '0.6rem', color: 'var(--text-primary)', fontSize: '0.85rem' }}
             />
           </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Google Gemini API Key</label>
+            <input
+              type="password"
+              placeholder="AIzaSy••••••••"
+              value={apiKeys.gemini || ''}
+              onChange={(e) => setApiKeys({ ...apiKeys, gemini: e.target.value })}
+              style={{ width: '100%', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '0.6rem', color: 'var(--text-primary)', fontSize: '0.85rem' }}
+            />
+          </div>
         </div>
       </div>
 

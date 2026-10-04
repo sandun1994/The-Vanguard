@@ -12,7 +12,7 @@ export const Pagination = ({
   if (totalItems <= pageSize) {
     return (
       <div style={{
-        marginTop: '2.5rem',
+        marginTop: '2rem',
         padding: '0.85rem 1.25rem',
         borderRadius: '12px',
         backgroundColor: 'var(--bg-card)',
@@ -20,6 +20,8 @@ export const Pagination = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '0.5rem',
         fontSize: '0.82rem',
         color: 'var(--text-muted)'
       }}>
@@ -35,7 +37,7 @@ export const Pagination = ({
           color: '#6366f1',
           fontWeight: '600'
         }}>
-          Page 1 of 1 (Max 20/page)
+          Page 1 of 1
         </span>
       </div>
     );
@@ -79,9 +81,9 @@ export const Pagination = ({
     <nav
       aria-label="Article Pagination"
       style={{
-        marginTop: '3rem',
+        marginTop: '2.5rem',
         marginBottom: '2rem',
-        padding: '1.25rem 1.5rem',
+        padding: '1rem 1.25rem',
         borderRadius: '16px',
         backgroundColor: 'var(--bg-card)',
         border: '1px solid var(--border-subtle)',
@@ -89,7 +91,7 @@ export const Pagination = ({
         alignItems: 'center',
         justifyContent: 'space-between',
         flexWrap: 'wrap',
-        gap: '1.25rem',
+        gap: '1rem',
         boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)'
       }}
     >
@@ -103,70 +105,46 @@ export const Pagination = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: '#6366f1'
+          color: '#6366f1',
+          flexShrink: 0
         }}>
-          <Layers size={17} />
+          <Layers size={16} />
         </div>
         <div>
-          <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-            Showing <strong style={{ color: 'var(--text-primary)' }}>{startItem}–{endItem}</strong> of <strong style={{ color: 'var(--text-primary)' }}>{totalItems}</strong> articles
+          <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+            Showing <strong style={{ color: 'var(--text-primary)' }}>{startItem}–{endItem}</strong> of <strong style={{ color: 'var(--text-primary)' }}>{totalItems}</strong>
           </div>
-          <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)' }}>
-            Displaying 20 articles per page
+          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+            20 articles per page
           </div>
         </div>
       </div>
 
       {/* Right: Page Buttons */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-        {/* First Page Button */}
-        {totalPages > 5 && (
-          <button
-            onClick={() => handlePageClick(1)}
-            disabled={currentPage === 1}
-            title="First Page"
-            style={{
-              width: '34px',
-              height: '34px',
-              borderRadius: '8px',
-              border: '1px solid var(--border-subtle)',
-              backgroundColor: 'var(--bg-main)',
-              color: currentPage === 1 ? 'var(--text-muted)' : 'var(--text-primary)',
-              cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              opacity: currentPage === 1 ? 0.4 : 1,
-              transition: 'all 0.15s ease'
-            }}
-          >
-            <ChevronsLeft size={16} />
-          </button>
-        )}
-
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexWrap: 'wrap' }}>
         {/* Previous Button */}
         <button
           onClick={() => handlePageClick(currentPage - 1)}
           disabled={currentPage === 1}
           title="Previous Page"
           style={{
-            height: '34px',
-            padding: '0 0.75rem',
+            height: '32px',
+            padding: '0 0.65rem',
             borderRadius: '8px',
             border: '1px solid var(--border-subtle)',
             backgroundColor: 'var(--bg-main)',
             color: currentPage === 1 ? 'var(--text-muted)' : 'var(--text-primary)',
-            fontSize: '0.82rem',
+            fontSize: '0.8rem',
             fontWeight: '600',
             cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '0.3rem',
+            gap: '0.2rem',
             opacity: currentPage === 1 ? 0.4 : 1,
             transition: 'all 0.15s ease'
           }}
         >
-          <ChevronLeft size={16} /> Prev
+          <ChevronLeft size={15} /> Prev
         </button>
 
         {/* Page Number Buttons */}
@@ -177,14 +155,14 @@ export const Pagination = ({
               key={page}
               onClick={() => handlePageClick(page)}
               style={{
-                width: '34px',
-                height: '34px',
+                width: '32px',
+                height: '32px',
                 borderRadius: '8px',
                 border: isActive ? '1px solid #6366f1' : '1px solid var(--border-subtle)',
                 backgroundColor: isActive ? '#6366f1' : 'var(--bg-main)',
                 color: isActive ? '#ffffff' : 'var(--text-secondary)',
                 fontWeight: isActive ? '700' : '500',
-                fontSize: '0.85rem',
+                fontSize: '0.82rem',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -204,49 +182,24 @@ export const Pagination = ({
           disabled={currentPage === totalPages}
           title="Next Page"
           style={{
-            height: '34px',
-            padding: '0 0.75rem',
+            height: '32px',
+            padding: '0 0.65rem',
             borderRadius: '8px',
             border: '1px solid var(--border-subtle)',
             backgroundColor: 'var(--bg-main)',
             color: currentPage === totalPages ? 'var(--text-muted)' : 'var(--text-primary)',
-            fontSize: '0.82rem',
+            fontSize: '0.8rem',
             fontWeight: '600',
             cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '0.3rem',
+            gap: '0.2rem',
             opacity: currentPage === totalPages ? 0.4 : 1,
             transition: 'all 0.15s ease'
           }}
         >
-          Next <ChevronRight size={16} />
+          Next <ChevronRight size={15} />
         </button>
-
-        {/* Last Page Button */}
-        {totalPages > 5 && (
-          <button
-            onClick={() => handlePageClick(totalPages)}
-            disabled={currentPage === totalPages}
-            title="Last Page"
-            style={{
-              width: '34px',
-              height: '34px',
-              borderRadius: '8px',
-              border: '1px solid var(--border-subtle)',
-              backgroundColor: 'var(--bg-main)',
-              color: currentPage === totalPages ? 'var(--text-muted)' : 'var(--text-primary)',
-              cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              opacity: currentPage === totalPages ? 0.4 : 1,
-              transition: 'all 0.15s ease'
-            }}
-          >
-            <ChevronsRight size={16} />
-          </button>
-        )}
       </div>
     </nav>
   );

@@ -31,12 +31,7 @@ export const ArticleGrid = ({
   }
 
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
-      gap: '1.75rem',
-      margin: '2rem 0'
-    }}>
+    <div className="responsive-article-grid">
       {articles.map((article) => (
         <div
           key={article.id}
@@ -68,7 +63,8 @@ export const ArticleGrid = ({
               top: '0.75rem',
               left: '0.75rem',
               display: 'flex',
-              gap: '0.4rem'
+              gap: '0.4rem',
+              flexWrap: 'wrap'
             }}>
               <CategoryBadge category={article.category} />
               {article.farkBadge && (
@@ -109,12 +105,12 @@ export const ArticleGrid = ({
           </div>
 
           {/* Card Body */}
-          <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', flex: 1, gap: '0.85rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+          <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', flex: 1, gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.4rem', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
               <span
                 onClick={(e) => { e.stopPropagation(); if (onOpenAuthorModal) onOpenAuthorModal(article.author); }}
                 style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#6366f1', fontWeight: '700', cursor: 'pointer' }}
-                title="Click to view Sandun Hewawasam Author Bio"
+                title="Click to view Author Bio"
               >
                 <BookOpen size={13} /> {article.author || 'Sandun Hewawasam, Senior Tech Editor'}
               </span>
@@ -126,7 +122,7 @@ export const ArticleGrid = ({
             <h3
               onClick={() => onSelectArticle(article)}
               style={{
-                fontSize: '1.2rem',
+                fontSize: '1.15rem',
                 fontWeight: '700',
                 lineHeight: 1.35,
                 color: 'var(--text-primary)',
@@ -141,7 +137,7 @@ export const ArticleGrid = ({
             </h3>
 
             <p style={{
-              fontSize: '0.875rem',
+              fontSize: '0.85rem',
               color: 'var(--text-secondary)',
               lineHeight: 1.5,
               display: '-webkit-box',
@@ -156,20 +152,22 @@ export const ArticleGrid = ({
             {/* Aggregator Action Bar (Upvotes, Comments, Bookmark) */}
             <div style={{
               borderTop: '1px solid var(--border-subtle)',
-              paddingTop: '0.85rem',
-              marginTop: '0.5rem',
+              paddingTop: '0.75rem',
+              marginTop: '0.35rem',
               display: 'flex',
               alignItems: 'center',
-              justify: 'space-between'
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '0.5rem'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
                 <button
                   onClick={(e) => { e.stopPropagation(); onToggleUpvote(article.id); }}
                   style={{
                     backgroundColor: article.isUpvoted ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255, 255, 255, 0.05)',
                     border: article.isUpvoted ? '1px solid #f59e0b' : '1px solid var(--border-subtle)',
                     color: article.isUpvoted ? '#f59e0b' : 'var(--text-secondary)',
-                    padding: '4px 10px',
+                    padding: '4px 9px',
                     borderRadius: '8px',
                     fontSize: '0.78rem',
                     fontWeight: '700',
@@ -190,7 +188,7 @@ export const ArticleGrid = ({
                     backgroundColor: 'rgba(255, 255, 255, 0.05)',
                     border: '1px solid var(--border-subtle)',
                     color: 'var(--text-secondary)',
-                    padding: '4px 9px',
+                    padding: '4px 8px',
                     borderRadius: '8px',
                     fontSize: '0.78rem',
                     fontWeight: '600',
@@ -227,7 +225,7 @@ export const ArticleGrid = ({
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    justify: 'center'
+                    justifyContent: 'center'
                   }}
                   title={article.isBookmarked ? 'Remove Bookmark' : 'Save to Reading List'}
                 >

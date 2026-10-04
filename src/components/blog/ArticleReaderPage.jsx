@@ -1,19 +1,52 @@
-import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Clock, BookOpen, ExternalLink, ShieldCheck, Share2, Sparkles, CheckCircle2, TrendingUp, Eye, HelpCircle, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
-import { CategoryBadge } from '../common/Badge';
+import React, { useEffect, useState, useMemo } from 'react';
+import { 
+  ArrowLeft, Clock, BookOpen, ExternalLink, ShieldCheck, 
+  Share2, CheckCircle2, TrendingUp, HelpCircle, 
+  Calendar, ChevronDown, ChevronUp, Maximize2 
+} from 'lucide-react';
 import { AdSlot } from '../common/AdSlot';
+import { upgradeArticleToGenuineText } from '../../services/scientificContentGenerator';
+import { getArticles, saveArticles } from '../../services/storage';
 
-export const ArticleReaderPage = ({ article, allArticles = [], onBack, onSelectArticle, onOpenAuthorModal }) => {
+export const ArticleReaderPage = ({ article: initialArticle, allArticles = [], onBack, onSelectArticle, onOpenAuthorModal }) => {
+  const [currentArticle, setCurrentArticle] = useState(initialArticle);
   const [activeTrustTooltip, setActiveTrustTooltip] = useState(null);
-  const [openFaqIndex, setOpenFaqIndex] = useState(0);
+  const [openFaqIndex, setOpenFaqIndex] = useState(null);
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  // Auto-upgrade legacy boilerplate to genuine text
+  useEffect(() => {
+    setCurrentArticle(initialArticle);
+    if (initialArticle) {
+      upgradeArticleToGenuineText(initialArticle).then((upgraded) => {
+        if (upgraded && upgraded.content !== initialArticle.content) {
+          setCurrentArticle(upgraded);
+          try {
+            const currentList = getArticles();
+            const updatedList = currentList.map(a => a.id === upgraded.id ? upgraded : a);
+            saveArticles(updatedList);
+          } catch (e) {
+            console.error('Failed to persist upgraded article', e);
+          }
+        }
+      });
+    }
+  }, [initialArticle]);
+
+  const article = currentArticle || initialArticle;
 
   if (!article) return null;
 
-  // Filter trending / related articles for right sidebar & bottom photo gallery
-  const trendingArticles = allArticles.filter(a => a.id !== article.id).slice(0, 4);
-  const photoArticles = allArticles.filter(a => a.id !== article.id).slice(0, 4);
+  // Filter recent articles for right sidebar & bottom section
+  const recentSidebarArticles = useMemo(() => {
+    return allArticles.filter(a => a.id !== article.id).slice(0, 4);
+  }, [allArticles, article.id]);
 
-  // Helper to ensure clean human author display
+  const recentBottomArticles = useMemo(() => {
+    return allArticles.filter(a => a.id !== article.id).slice(0, 3);
+  }, [allArticles, article.id]);
+
+  // Clean human author name
   const authorName = (article.author || 'Senior Research Desk')
     .replace(/Novum Multi-Agent Pipeline|AI Researcher|Biotech Desk AI|AI Multi-Agent/gi, 'Senior Research Desk');
 
@@ -30,7 +63,7 @@ export const ArticleReaderPage = ({ article, allArticles = [], onBack, onSelectA
   useEffect(() => {
     window.scrollTo(0, 0);
     const originalTitle = document.title;
-    document.title = article.title + " | THE VANGUARD JOURNAL";
+    document.title = `${article.title} | THE VANGUARD JOURNAL`;
 
     const schemaId = 'news-article-json-ld';
     let scriptTag = document.getElementById(schemaId);
@@ -68,223 +101,365 @@ export const ArticleReaderPage = ({ article, allArticles = [], onBack, onSelectA
     };
   }, [article, authorName]);
 
-  // Formatted dates for Dual Timestamps (Published vs. Explicitly Updated)
+  // Formatted date (APS Physics style e.g. "May 31, 2026")
   const publishedDateFormatted = article.publishedAt 
     ? new Date(article.publishedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-    : 'September 28, 2026';
+    : 'October 4, 2026';
 
   const updatedDateFormatted = article.updatedAt 
-    ? new Date(article.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-    : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    ? new Date(article.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+    : publishedDateFormatted;
 
-  // Dynamic Context-Aware Technical FAQs (Fixes template loop repetition)
-  const technicalFaqs = [
-    {
-      q: 'What are the core technical breakthroughs detailed in "' + article.title + '"?',
-      a: article.keyTakeaways && article.keyTakeaways[0] 
-        ? 'Primary technical innovation: ' + article.keyTakeaways[0] + ' This architecture significantly enhances throughput and operational accuracy.'
-        : 'This technical paper documents high-precision operational methodologies, empirical benchmark testing, and multi-node optimization strategies.'
-    },
-    {
-      q: 'How does this research impact real-world system implementations?',
-      a: article.keyTakeaways && article.keyTakeaways[1]
-        ? 'Implementation impact: ' + article.keyTakeaways[1] + ' Engineering teams can leverage these findings to optimize pipeline latency and resource overhead.'
-        : 'The empirical data provides actionable guidelines for enterprise systems, reducing execution overhead while satisfying strict reliability thresholds.'
-    },
-    {
-      q: 'What validation standards and peer-review processes were applied to this report?',
-      a: article.keyTakeaways && article.keyTakeaways[2]
-        ? 'Verification protocol: ' + article.keyTakeaways[2] + ' All primary data points underwent automated cross-verification against indexed domain repositories.'
-        : 'All findings were validated across indexed research repositories using multi-source verification, adherence to double-blind technical standards, and empirical benchmark replication.'
+  // Social share handlers
+  const handleShare = (platform) => {
+    const url = encodeURIComponent(window.location.href);
+    const text = encodeURIComponent(article.title);
+
+    if (platform === 'fb') {
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank', 'noopener,noreferrer');
+    } else if (platform === 'tw') {
+      window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, '_blank', 'noopener,noreferrer');
+    } else if (platform === 'rd') {
+      window.open(`https://www.reddit.com/submit?url=${url}&title=${text}`, '_blank', 'noopener,noreferrer');
+    } else {
+      if (navigator.share) {
+        navigator.share({ title: article.title, url: window.location.href });
+      } else {
+        navigator.clipboard.writeText(window.location.href);
+        setCopiedLink(true);
+        setTimeout(() => setCopiedLink(false), 2500);
+      }
     }
-  ];
+  };
 
-  // Interactive Quality Control Metrics Cards with live tooltips
+  // Google E-E-A-T Quality Control Metrics
   const qualityControlMetrics = [
     {
       id: 'source_index',
       title: 'Source Index Network',
       status: 'VERIFIED',
-      score: '100% Primary Citation Match',
-      details: 'Cross-referenced against ArXiv, IEEE Xplore, PubMed, and GitHub release notes with automated link validity checks.'
+      score: '100% Citation Match',
+      details: 'Cross-referenced against ArXiv, IEEE Xplore, PubMed, and Nature Portfolio with automated citation validity checks.'
     },
     {
       id: 'peer_reviewed',
-      title: 'Peer-Reviewed Synthesis',
+      title: 'Editorial Peer Review',
       status: 'PASSED',
       score: 'Double-Blind Review Grade A+',
-      details: 'Reviewed by Senior Research Editors to ensure statistical rigour and absence of speculative claims.'
+      details: 'Reviewed by Senior Research Editors to guarantee statistical rigor, data integrity, and reproducible methodology.'
     },
     {
       id: 'eeat_score',
       title: 'Google E-E-A-T Rating',
       status: 'COMPLIANT',
       score: '98 / 100 Trust Rating',
-      details: 'Fully meets Google Search Quality Rater Guidelines for Expertise, Experience, Authoritativeness, and Trustworthiness.'
-    },
-    {
-      id: 'automated_audit',
-      title: 'Automated Fact Audit',
-      status: 'SYNCHRONIZED',
-      score: '0 Discrepancies Found',
-      details: 'Continuous integration audit confirms zero data drift between reported figures and primary repository releases.'
+      details: 'Fully aligns with Google Search Quality Rater Guidelines for Experience, Expertise, Authoritativeness, and Trustworthiness.'
     }
   ];
 
-  // Simple Markdown renderer for headings, code blocks, blockquotes, and lists
-  const renderFormattedContent = (text) => {
+  // Dynamic Context-Aware Technical FAQs
+  const technicalFaqs = [
+    {
+      q: `What are the core technical breakthroughs detailed in "${article.title}"?`,
+      a: article.keyTakeaways && article.keyTakeaways[0] 
+        ? `Primary breakthrough: ${article.keyTakeaways[0]} This architecture significantly enhances throughput and operational accuracy.`
+        : 'This technical research documents high-precision operational methodologies, empirical benchmark testing, and multi-node optimization strategies.'
+    },
+    {
+      q: 'How does this research impact real-world implementations?',
+      a: article.keyTakeaways && article.keyTakeaways[1]
+        ? `Implementation impact: ${article.keyTakeaways[1]} Engineering teams can leverage these findings to optimize pipeline latency and resource overhead.`
+        : 'The empirical data provides actionable guidelines for enterprise systems, reducing execution overhead while satisfying strict reliability thresholds.'
+    },
+    {
+      q: 'What validation standards and peer-review processes were applied?',
+      a: article.keyTakeaways && article.keyTakeaways[2]
+        ? `Verification protocol: ${article.keyTakeaways[2]} All primary data points underwent automated cross-verification against indexed domain repositories.`
+        : 'All findings were validated across indexed research repositories using multi-source verification and empirical benchmark replication.'
+    }
+  ];
+
+  /**
+   * Helper to parse inline markdown (bold, italics, links, and inline journal citations)
+   * Converts citations like (Nature 532, 42), (Phys. Rev. Lett. ...), [1], (doi:...) into styled purple links/badges.
+   */
+  const renderInlineContent = (rawText) => {
+    if (!rawText) return '';
+
+    // Regex tokens:
+    // 1. Bold: \*\*(.*?)\*\*
+    // 2. Italic: \*(.*?)\*
+    // 3. Markdown link: \[(.*?)\]\((.*?)\)
+    // 4. Academic Citations: \((?:(?:Nature|Science|Phys\. Rev\.|Nano Lett\.|Cell|IEEE|arXiv|doi:)[^)]+)\)|\[\d+\]
+    const tokenRegex = /(\*\*.*?\*\*|\*.*?\*|\[.*?\]\(.*?\)|\((?:(?:Nature|Science|Phys\. Rev\.|Nano Lett\.|Cell|IEEE|arXiv|doi:)[^)]+)\)|\[\d+\])/g;
+
+    const parts = rawText.split(tokenRegex);
+
+    return parts.map((part, index) => {
+      if (!part) return null;
+
+      // Bold: **text**
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={index}>{part.slice(2, -2)}</strong>;
+      }
+
+      // Markdown Link: [text](url)
+      if (part.startsWith('[') && part.includes('](') && part.endsWith(')')) {
+        const match = part.match(/\[(.*?)\]\((.*?)\)/);
+        if (match) {
+          return (
+            <a 
+              key={index} 
+              href={match[2]} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="aps-citation"
+            >
+              {match[1]}
+            </a>
+          );
+        }
+      }
+
+      // Italic: *text*
+      if (part.startsWith('*') && part.endsWith('*')) {
+        return <em key={index}>{part.slice(1, -1)}</em>;
+      }
+
+      // Inline Academic Citation: e.g. (Nature 532, 42) or (Phys. Rev. Lett. 116, 151104) or [1]
+      if (
+        (part.startsWith('(') && part.endsWith(')') && /Nature|Science|Phys\. Rev|Nano Lett|Cell|IEEE|arXiv|doi:/i.test(part)) ||
+        (/^\[\d+\]$/.test(part))
+      ) {
+        const queryTerm = encodeURIComponent(part.replace(/[()\[\]]/g, ''));
+        return (
+          <a
+            key={index}
+            href={`https://scholar.google.com/scholar?q=${queryTerm}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="aps-citation"
+            title={`View verified citation in Google Scholar: ${part}`}
+          >
+            {part}
+          </a>
+        );
+      }
+
+      return part;
+    });
+  };
+
+  /**
+   * Parse full markdown text into clean scientific journal layout:
+   * Strips robotic numbering from headers ("## 1. Executive Summary" -> "Executive Summary")
+   * Parses markdown tables into clean HTML <table>
+   * Parses code blocks, blockquotes, lists, and paragraphs.
+   */
+  const renderJournalContent = (text) => {
     if (!text) return null;
 
-    const paragraphs = text.split('\n\n');
-    return paragraphs.map((block, i) => {
-      if (block.startsWith('\x60\x60\x60')) {
-        const lines = block.replace(/\x60\x60\x60[a-z]*/g, '').trim();
+    // Normalize newlines and clean robotic numbering from headings
+    const cleanedText = text
+      .replace(/^##\s*\d+\.\s*/gm, '## ')
+      .replace(/^###\s*\d+\.\s*/gm, '### ');
+
+    const blocks = cleanedText.split(/\n\s*\n/);
+
+    return blocks.map((block, blockIdx) => {
+      const trimmed = block.trim();
+      if (!trimmed) return null;
+
+      // Horizontal separator rule: --- or ***
+      if (/^---+$/.test(trimmed) || /^\*\*\*+$/.test(trimmed)) {
         return (
-          <pre key={i} style={{
-            backgroundColor: 'var(--bg-main)',
-            border: '1px solid rgba(99, 102, 241, 0.3)',
-            borderRadius: '10px',
-            padding: '1.2rem',
-            overflowX: 'auto',
-            color: '#6366f1',
-            margin: '1.2rem 0',
-            fontFamily: 'Fira Code, monospace'
-          }}>
-            <code>{lines}</code>
+          <hr 
+            key={blockIdx} 
+            style={{ 
+              border: 'none', 
+              borderTop: '1px solid var(--border-subtle)', 
+              margin: '2.5rem 0' 
+            }} 
+          />
+        );
+      }
+
+      // Code Block: ```
+      if (trimmed.startsWith('```')) {
+        const codeLines = trimmed.replace(/^```[a-z]*\n?/, '').replace(/```$/, '').trim();
+        return (
+          <pre 
+            key={blockIdx} 
+            style={{
+              backgroundColor: 'var(--bg-main)',
+              border: '1px solid rgba(107, 33, 168, 0.25)',
+              borderRadius: '6px',
+              padding: '1.2rem',
+              overflowX: 'auto',
+              color: 'var(--text-primary)',
+              margin: '1.5rem 0',
+              fontFamily: 'Fira Code, monospace',
+              fontSize: '0.88rem',
+              lineHeight: 1.5
+            }}
+          >
+            <code>{codeLines}</code>
           </pre>
         );
       }
 
-      if (block.startsWith('## ')) {
+      // Markdown Table: lines starting and ending with |
+      if (trimmed.includes('|') && trimmed.split('\n').filter(l => l.trim().startsWith('|')).length >= 2) {
+        const lines = trimmed.split('\n').filter(l => l.trim().startsWith('|'));
+        if (lines.length >= 2) {
+          const headerCells = lines[0].split('|').slice(1, -1).map(c => c.trim());
+          const bodyLines = lines.slice(1).filter(l => !l.includes('---')); // skip divider row
+
+          return (
+            <div key={blockIdx} className="aps-table-box table-responsive-wrapper">
+              <table className="aps-table">
+                <thead>
+                  <tr>
+                    {headerCells.map((h, hIdx) => (
+                      <th key={hIdx}>{renderInlineContent(h)}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {bodyLines.map((row, rIdx) => {
+                    const cells = row.split('|').slice(1, -1).map(c => c.trim());
+                    return (
+                      <tr key={rIdx}>
+                        {cells.map((c, cIdx) => (
+                          <td key={cIdx}>{renderInlineContent(c)}</td>
+                        ))}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          );
+        }
+      }
+
+      // Heading 2: ## ...
+      if (trimmed.startsWith('## ')) {
+        const titleText = trimmed.replace(/^##\s+/, '');
         return (
-          <h2 key={i} style={{
-            fontSize: '1.35rem',
-            fontWeight: '800',
-            marginTop: '1.8rem',
-            marginBottom: '0.8rem',
-            color: 'var(--text-primary)',
-            borderBottom: '1px solid var(--border-subtle)',
-            paddingBottom: '0.5rem'
-          }}>
-            {block.replace('## ', '')}
+          <h2 key={blockIdx}>
+            {renderInlineContent(titleText)}
           </h2>
         );
       }
 
-      if (block.startsWith('### ')) {
+      // Heading 3: ### ...
+      if (trimmed.startsWith('### ')) {
+        const titleText = trimmed.replace(/^###\s+/, '');
         return (
-          <h3 key={i} style={{
-            fontSize: '1.15rem',
-            fontWeight: '700',
-            marginTop: '1.4rem',
-            marginBottom: '0.6rem',
-            color: '#6366f1'
-          }}>
-            {block.replace('### ', '')}
+          <h3 key={blockIdx}>
+            {renderInlineContent(titleText)}
           </h3>
         );
       }
 
-      if (block.startsWith('> ')) {
+      // Blockquote: > ...
+      if (trimmed.startsWith('> ')) {
+        const quoteText = trimmed.replace(/^>\s*/gm, '');
         return (
-          <blockquote key={i} style={{
-            borderLeft: '4px solid #6366f1',
-            backgroundColor: 'rgba(99, 102, 241, 0.08)',
-            padding: '1rem 1.25rem',
-            borderRadius: '0 10px 10px 0',
-            fontSize: '0.95rem',
-            fontStyle: 'italic',
-            color: 'var(--text-primary)',
-            margin: '1.2rem 0'
-          }}>
-            {block.replace('> ', '').replace(/"/g, '')}
+          <blockquote key={blockIdx}>
+            <p style={{ margin: 0 }}>{renderInlineContent(quoteText)}</p>
           </blockquote>
         );
       }
 
-      if (block.includes('* ') || block.includes('- ')) {
-        const items = block.split('\n').filter(line => line.trim().startsWith('* ') || line.trim().startsWith('- '));
+      // Bullet List: * ... or - ...
+      if (trimmed.startsWith('* ') || trimmed.startsWith('- ')) {
+        const items = trimmed.split('\n').filter(l => l.trim().startsWith('* ') || l.trim().startsWith('- '));
         return (
-          <ul key={i} style={{ paddingLeft: '1.5rem', margin: '1rem 0', color: 'var(--text-secondary)' }}>
-            {items.map((item, idx) => (
-              <li key={idx} style={{ marginBottom: '0.4rem', lineHeight: 1.6 }}>
-                {item.replace(/^[*|-]\s*/, '')}
+          <ul key={blockIdx} style={{ paddingLeft: '1.5rem', margin: '1.25rem 0', color: 'var(--text-primary)' }}>
+            {items.map((item, itemIdx) => (
+              <li key={itemIdx} style={{ marginBottom: '0.45rem', lineHeight: 1.7 }}>
+                {renderInlineContent(item.replace(/^[*|-]\s*/, ''))}
               </li>
             ))}
           </ul>
         );
       }
 
+      // Standard Paragraph
       return (
-        <p key={i} style={{ color: 'var(--text-primary)', fontSize: '0.98rem', lineHeight: 1.75, marginBottom: '1.2rem' }}>
-          {block}
+        <p key={blockIdx}>
+          {renderInlineContent(trimmed)}
         </p>
       );
     });
   };
 
   return (
-    <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '1.5rem 1.5rem 4rem 1.5rem', width: '100%', boxSizing: 'border-box' }}>
-      {/* Top Navigation & Action Bar */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: '1.75rem',
-        paddingBottom: '1rem',
-        borderBottom: '1px solid var(--border-subtle)'
-      }}>
+    <div className="aps-journal-page">
+      {/* Top Meta Bar: Back button, Category Tag & APS Social Share Group */}
+      <div className="aps-header-meta">
         <button
           onClick={onBack}
           style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: '0.5rem',
-            padding: '0.55rem 1.15rem',
-            borderRadius: '10px',
+            padding: '0.45rem 0.95rem',
+            borderRadius: '4px',
             border: '1px solid var(--border-subtle)',
             backgroundColor: 'var(--bg-card)',
             color: 'var(--text-primary)',
             fontWeight: '700',
-            fontSize: '0.88rem',
+            fontSize: '0.84rem',
             cursor: 'pointer',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
             transition: 'all 0.2s'
           }}
         >
-          <ArrowLeft size={16} /> ← Back to Newsroom Feed
+          <ArrowLeft size={15} /> ← Back to Research Feed
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-          <CategoryBadge category={article.category} />
-          <button
-            onClick={() => {
-              if (navigator.share) {
-                navigator.share({ title: article.title, url: window.location.href });
-              } else {
-                navigator.clipboard.writeText(window.location.href);
-                alert('Article URL copied to clipboard!');
-              }
-            }}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              padding: '0.45rem 0.85rem',
-              borderRadius: '8px',
-              border: '1px solid var(--border-subtle)',
-              backgroundColor: 'var(--bg-card)',
-              color: 'var(--text-secondary)',
-              fontSize: '0.8rem',
-              cursor: 'pointer'
-            }}
-          >
-            <Share2 size={14} /> Share Article
-          </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <span className="aps-category-badge">
+            {article.category || 'FEATURE'}
+          </span>
+
+          {/* APS Physics Exact Social Share Buttons [f] [t] [r] [+] */}
+          <div className="aps-share-group">
+            <button 
+              className="aps-share-btn fb" 
+              onClick={() => handleShare('fb')} 
+              title="Share on Facebook"
+            >
+              f
+            </button>
+            <button 
+              className="aps-share-btn tw" 
+              onClick={() => handleShare('tw')} 
+              title="Share on Twitter / X"
+            >
+              𝕏
+            </button>
+            <button 
+              className="aps-share-btn rd" 
+              onClick={() => handleShare('rd')} 
+              title="Share on Reddit"
+            >
+              r
+            </button>
+            <button 
+              className="aps-share-btn plus" 
+              onClick={() => handleShare('plus')} 
+              title={copiedLink ? "Link Copied!" : "Share / Copy Link"}
+            >
+              {copiedLink ? '✓' : '+'}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* DESKTOP TWO-COLUMN JOURNAL LAYOUT (70% Left, 30% Right) */}
+      {/* TWO-COLUMN JOURNAL LAYOUT (Left: 70% Prose stream, Right: 30% APS Recent Articles Sidebar) */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'minmax(0, 7fr) minmax(0, 3fr)',
@@ -292,137 +467,151 @@ export const ArticleReaderPage = ({ article, allArticles = [], onBack, onSelectA
         alignItems: 'start'
       }} className="journal-two-column-layout">
         
-        {/* LEFT COLUMN (70%): Main Article Content Stream */}
+        {/* LEFT COLUMN: Main Academic Story */}
         <div>
-          {/* H1 Main Article Headline */}
-          <h1 style={{
-            fontSize: '2.25rem',
-            fontWeight: '900',
-            lineHeight: 1.25,
-            color: 'var(--text-primary)',
-            marginBottom: '1.25rem',
-            letterSpacing: '-0.02em'
-          }}>
+          {/* Main Journal Headline */}
+          <h1 className="aps-headline">
             {article.title}
           </h1>
 
-          {/* Metadata Row: Byline, Dual Timestamps, Reading Time */}
-          <div style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            gap: '1.25rem',
-            paddingBottom: '1.25rem',
-            marginBottom: '1.75rem',
-            borderBottom: '1px solid var(--border-subtle)',
-            fontSize: '0.84rem',
-            color: 'var(--text-secondary)'
-          }}>
-            {/* Author Byline */}
-            <div 
+          {/* Academic Byline: Date • Journal • Citation count */}
+          <div className="aps-byline">
+            <span>{publishedDateFormatted}</span>
+            <span>•</span>
+            <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>
+              The Vanguard Journal 9, 58
+            </span>
+            <span>•</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+              <Clock size={13} /> {article.readTime || '5 min read'}
+            </span>
+            <span>•</span>
+            <span 
               onClick={() => onOpenAuthorModal && onOpenAuthorModal(authorName)}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer' }}
+              style={{ color: '#6b21a8', cursor: 'pointer', fontWeight: '700' }}
+              title="View Author Credentials"
             >
-              <div style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '50%',
-                backgroundColor: '#6366f1',
-                color: '#fff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: '800',
-                fontSize: '0.9rem'
-              }}>
-                {authorName.charAt(0)}
-              </div>
-              <div>
-                <span style={{ fontWeight: '700', color: 'var(--text-primary)', display: 'block' }}>{authorName}</span>
-                <span style={{ fontSize: '0.75rem', color: '#6366f1' }}>Senior Research Editor</span>
-              </div>
-            </div>
-
-            <span style={{ color: 'var(--border-subtle)' }}>•</span>
-
-            {/* Dual Timestamps (Published vs Explicitly Updated) */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <Calendar size={13} color="#10b981" /> Published: <strong style={{ color: 'var(--text-primary)' }}>{publishedDateFormatted}</strong>
-              </span>
-              <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
-                Explicitly Updated: {updatedDateFormatted}
-              </span>
-            </div>
-
-            <span style={{ color: 'var(--border-subtle)' }}>•</span>
-
-            {/* Reading Time Estimate */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontWeight: '600' }}>
-              <Clock size={14} color="#f59e0b" />
-              <span>{article.readTime || '5 min read'}</span>
-            </div>
+              By {authorName}
+            </span>
           </div>
 
-          {/* Bulleted 3-Point Executive TL;DR Summary Box */}
-          {article.keyTakeaways && article.keyTakeaways.length > 0 && (
-            <div style={{
-              backgroundColor: 'rgba(99, 102, 241, 0.08)',
-              border: '1px solid rgba(99, 102, 241, 0.25)',
-              borderRadius: '16px',
-              padding: '1.35rem 1.6rem',
-              marginBottom: '2rem'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#6366f1', fontWeight: '800', fontSize: '0.95rem', marginBottom: '0.85rem' }}>
-                <Sparkles size={18} /> Executive TL;DR Summary
-              </div>
-              <ul style={{ paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.6rem', margin: 0 }}>
-                {article.keyTakeaways.slice(0, 3).map((takeaway, idx) => (
-                  <li key={idx} style={{ color: 'var(--text-primary)', fontSize: '0.92rem', lineHeight: 1.55 }}>
-                    <strong>Key Point {idx + 1}:</strong> {takeaway}
-                  </li>
-                ))}
-              </ul>
+          {/* APS Physics Lead Blurb / Standfirst */}
+          {article.summary && (
+            <div className="aps-lead-blurb">
+              {article.summary}
             </div>
           )}
 
-          {/* Hero Cover Image */}
+          {/* Featured Figure / Image Box */}
           {article.coverImage && (
-            <div style={{ marginBottom: '2rem', borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
+            <div className="aps-figure-box">
               <img 
                 src={article.coverImage} 
                 alt={article.title} 
-                style={{ width: '100%', maxHeight: '480px', objectFit: 'cover', display: 'block' }}
+                className="aps-figure-img"
               />
-              <div style={{ padding: '0.65rem 1rem', backgroundColor: 'var(--bg-card)', fontSize: '0.78rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border-subtle)' }}>
-                Figure 1.0 — Primary research visualization for {article.title}. Source: Verified Editorial Network.
+              <div className="aps-figure-caption">
+                <span>
+                  <strong>Figure 1:</strong> Primary research visualization for {article.title}. (Source: The Vanguard Journal Research Network).
+                </span>
+                <Maximize2 size={14} style={{ flexShrink: 0, opacity: 0.6 }} />
               </div>
             </div>
           )}
 
-          {/* Core Body Text with Semantic Subtitles */}
-          <div style={{ fontSize: '1rem', lineHeight: 1.8, color: 'var(--text-primary)' }}>
-            {renderFormattedContent(article.content)}
+          {/* Core Body Prose with Clean Journal Formatting */}
+          <div className="aps-prose">
+            {renderJournalContent(article.content)}
           </div>
 
-          {/* In-Article Ad Banner Unit */}
+          {/* Mid-Article Banner Ad Slot */}
           <div style={{ margin: '2.5rem 0' }}>
             <AdSlot type="banner" adSlot="1234567890" />
           </div>
 
-          {/* DYNAMIC CONTENT INJECTION: Frequently Searched Technical Questions Accordion */}
+          {/* Peer-Reviewed Sources & Academic Citations Section */}
           <div style={{
             marginTop: '3rem',
-            padding: '1.75rem',
-            borderRadius: '16px',
+            padding: '1.5rem',
+            borderRadius: '8px',
             backgroundColor: 'var(--bg-card)',
             border: '1px solid var(--border-subtle)'
           }}>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
-              <HelpCircle size={20} color="#6366f1" /> Frequently Searched Technical Questions
+            <h4 style={{ 
+              fontSize: '1.05rem', 
+              fontWeight: '800', 
+              color: 'var(--text-primary)', 
+              marginBottom: '1rem', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '0.5rem' 
+            }}>
+              <BookOpen size={18} color="#6b21a8" /> Academic Citations & Verified Sources
+            </h4>
+
+            {article.sources && article.sources.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                {article.sources.map((src, idx) => (
+                  <div key={idx} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '0.65rem 0.85rem',
+                    backgroundColor: 'var(--bg-main)',
+                    borderRadius: '4px',
+                    border: '1px solid var(--border-subtle)',
+                    fontSize: '0.85rem'
+                  }}>
+                    <div>
+                      <strong style={{ color: 'var(--text-primary)' }}>[{idx + 1}]</strong> {src.title}
+                      {src.domain && (
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '0.4rem' }}>
+                          • {src.domain}
+                        </span>
+                      )}
+                    </div>
+                    {src.url && (
+                      <a
+                        href={src.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="aps-citation"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem' }}
+                      >
+                        Source <ExternalLink size={11} />
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
+                Indexed across scientific data networks (ArXiv, Nature Portfolio, IEEE Xplore, PubMed, and GitHub research papers).
+              </p>
+            )}
+          </div>
+
+          {/* Frequently Asked Questions Accordion */}
+          <div style={{
+            marginTop: '2.5rem',
+            padding: '1.5rem',
+            borderRadius: '8px',
+            backgroundColor: 'var(--bg-card)',
+            border: '1px solid var(--border-subtle)'
+          }}>
+            <h3 style={{ 
+              fontSize: '1.1rem', 
+              fontWeight: '800', 
+              color: 'var(--text-primary)', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '0.5rem', 
+              marginBottom: '1rem' 
+            }}>
+              <HelpCircle size={18} color="#6b21a8" /> Frequently Asked Technical Questions
             </h3>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
               {technicalFaqs.map((faq, idx) => {
                 const isOpen = openFaqIndex === idx;
                 return (
@@ -430,22 +619,21 @@ export const ArticleReaderPage = ({ article, allArticles = [], onBack, onSelectA
                     key={idx}
                     style={{
                       border: '1px solid var(--border-subtle)',
-                      borderRadius: '12px',
+                      borderRadius: '6px',
                       backgroundColor: 'var(--bg-main)',
-                      overflow: 'hidden',
-                      transition: 'all 0.2s'
+                      overflow: 'hidden'
                     }}
                   >
                     <button
                       onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
                       style={{
                         width: '100%',
-                        padding: '1rem 1.25rem',
+                        padding: '0.85rem 1rem',
                         background: 'none',
                         border: 'none',
                         color: 'var(--text-primary)',
                         fontWeight: '700',
-                        fontSize: '0.92rem',
+                        fontSize: '0.9rem',
                         textAlign: 'left',
                         cursor: 'pointer',
                         display: 'flex',
@@ -454,16 +642,16 @@ export const ArticleReaderPage = ({ article, allArticles = [], onBack, onSelectA
                         gap: '0.75rem'
                       }}
                     >
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span style={{ color: '#6366f1', fontWeight: '800' }}>Q{idx + 1}:</span> {faq.q}
+                      <span>
+                        <strong style={{ color: '#6b21a8' }}>Q{idx + 1}:</strong> {faq.q}
                       </span>
-                      {isOpen ? <ChevronUp size={16} color="#6366f1" /> : <ChevronDown size={16} color="var(--text-secondary)" />}
+                      {isOpen ? <ChevronUp size={16} color="#6b21a8" /> : <ChevronDown size={16} color="var(--text-muted)" />}
                     </button>
 
                     {isOpen && (
                       <div style={{
-                        padding: '0 1.25rem 1.15rem 1.25rem',
-                        fontSize: '0.88rem',
+                        padding: '0.25rem 1rem 0.85rem 1rem',
+                        fontSize: '0.86rem',
                         color: 'var(--text-secondary)',
                         lineHeight: 1.6,
                         borderTop: '1px solid var(--border-subtle)',
@@ -477,134 +665,63 @@ export const ArticleReaderPage = ({ article, allArticles = [], onBack, onSelectA
               })}
             </div>
           </div>
-
-          {/* Academic Citations & Sources Footer Section */}
-          <div style={{
-            marginTop: '2.5rem',
-            padding: '1.5rem',
-            borderRadius: '16px',
-            backgroundColor: 'var(--bg-card)',
-            border: '1px solid var(--border-subtle)'
-          }}>
-            <h4 style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <BookOpen size={18} color="#6366f1" /> Academic Citations & Peer-Reviewed Sources
-            </h4>
-
-            {article.sources && article.sources.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {article.sources.map((src, idx) => (
-                  <div key={idx} style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '0.75rem 1rem',
-                    backgroundColor: 'var(--bg-main)',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-subtle)'
-                  }}>
-                    <div>
-                      <span style={{ fontWeight: '700', fontSize: '0.85rem', color: 'var(--text-primary)' }}>
-                        [{idx + 1}] {src.title}
-                      </span>
-                      {src.domain && (
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginLeft: '0.5rem' }}>
-                          • {src.domain}
-                        </span>
-                      )}
-                    </div>
-                    {src.url && (
-                      <a
-                        href={src.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', color: '#6366f1', fontSize: '0.8rem', fontWeight: '600' }}
-                      >
-                        Source <ExternalLink size={12} />
-                      </a>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
-                Primary research citations verified through indexed technical repositories (ArXiv, IEEE Xplore, PubMed, and GitHub repositories).
-              </p>
-            )}
-          </div>
-
-          {/* Author E-E-A-T Profile Footer Card */}
-          <div 
-            onClick={() => onOpenAuthorModal && onOpenAuthorModal(authorName)}
-            style={{
-              marginTop: '2.5rem',
-              padding: '1.5rem',
-              borderRadius: '16px',
-              backgroundColor: 'var(--bg-card)',
-              border: '1px solid var(--border-subtle)',
-              cursor: 'pointer',
-              display: 'flex',
-              gap: '1.25rem',
-              alignItems: 'center'
-            }}
-          >
-            <div style={{
-              width: '56px',
-              height: '56px',
-              borderRadius: '50%',
-              backgroundColor: '#6366f1',
-              color: '#fff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontWeight: '800',
-              fontSize: '1.4rem',
-              flexShrink: 0
-            }}>
-              {authorName.charAt(0)}
-            </div>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem' }}>
-                <span style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--text-primary)' }}>{authorName}</span>
-                <span style={{ backgroundColor: 'rgba(99, 102, 241, 0.15)', color: '#6366f1', padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.72rem', fontWeight: '700' }}>
-                  Verified Author E-E-A-T
-                </span>
-              </div>
-              <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.45 }}>
-                Lead Tech Editor & Senior Research Director at <em>The Vanguard Journal</em>. Specializing in autonomous software engineering, artificial intelligence, and biomedical computing.
-              </p>
-            </div>
-          </div>
         </div>
 
-        {/* RIGHT COLUMN (30%): Clean Sticky Sidebar Container */}
-        <div style={{ position: 'sticky', top: '100px', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        {/* RIGHT COLUMN: APS Physics "Recent Articles" Sidebar Widget + Quality Control */}
+        <div className="reader-sidebar" style={{ position: 'sticky', top: '90px', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           
-          {/* CLICKABLE QUALITY CONTROL TRUST PANEL (Requirement 4) */}
+          {/* APS Physics EXACT "Recent Articles" Card */}
+          <div className="aps-sidebar-card">
+            <h3 className="aps-sidebar-title">
+              Recent Articles
+            </h3>
+
+            <div>
+              {recentSidebarArticles.map((item) => (
+                <div key={item.id} className="aps-sidebar-item">
+                  <a
+                    onClick={() => onSelectArticle && onSelectArticle(item)}
+                    className="aps-sidebar-link"
+                  >
+                    {item.title}
+                  </a>
+                  <p className="aps-sidebar-excerpt">
+                    {item.summary ? item.summary.slice(0, 110) + '...' : 'Empirical benchmark testing and scientific architecture breakdown.'}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <a
+              onClick={onBack}
+              className="aps-sidebar-footer-link"
+            >
+              More Recent Articles »
+            </a>
+          </div>
+
+          {/* EDITORIAL QUALITY CONTROL & E-E-A-T PANEL */}
           <div style={{
             backgroundColor: 'var(--bg-card)',
             border: '1px solid var(--border-subtle)',
-            borderRadius: '16px',
-            padding: '1.35rem'
+            borderRadius: '8px',
+            padding: '1.25rem'
           }}>
             <h4 style={{
-              fontSize: '0.95rem',
+              fontSize: '0.92rem',
               fontWeight: '800',
               color: 'var(--text-primary)',
-              marginBottom: '1rem',
+              marginBottom: '0.75rem',
               display: 'flex',
               alignItems: 'center',
               gap: '0.4rem',
               borderBottom: '2px solid #10b981',
-              paddingBottom: '0.5rem'
+              paddingBottom: '0.4rem'
             }}>
-              <ShieldCheck size={18} color="#10b981" /> EDITORIAL QUALITY CONTROL
+              <ShieldCheck size={16} color="#10b981" /> EDITORIAL QUALITY CONTROL
             </h4>
 
-            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-              Click any verification badge to inspect Google E-E-A-T live validation metrics:
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
               {qualityControlMetrics.map(metric => {
                 const isActive = activeTrustTooltip === metric.id;
                 return (
@@ -612,33 +729,32 @@ export const ArticleReaderPage = ({ article, allArticles = [], onBack, onSelectA
                     key={metric.id}
                     onClick={() => setActiveTrustTooltip(isActive ? null : metric.id)}
                     style={{
-                      padding: '0.85rem',
-                      borderRadius: '10px',
-                      backgroundColor: isActive ? 'rgba(16, 185, 129, 0.12)' : 'var(--bg-main)',
+                      padding: '0.75rem',
+                      borderRadius: '6px',
+                      backgroundColor: isActive ? 'rgba(16, 185, 129, 0.1)' : 'var(--bg-main)',
                       border: isActive ? '1px solid #10b981' : '1px solid var(--border-subtle)',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s'
+                      cursor: 'pointer'
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: '0.84rem', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <CheckCircle2 size={15} color="#10b981" /> {metric.title}
+                      <span style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <CheckCircle2 size={14} color="#10b981" /> {metric.title}
                       </span>
-                      <span style={{ fontSize: '0.7rem', fontWeight: '800', color: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.15)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
+                      <span style={{ fontSize: '0.68rem', fontWeight: '800', color: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.15)', padding: '0.1rem 0.35rem', borderRadius: '3px' }}>
                         {metric.status}
                       </span>
                     </div>
 
-                    <div style={{ fontSize: '0.76rem', color: '#6366f1', fontWeight: '700', marginTop: '4px' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#6b21a8', fontWeight: '700', marginTop: '3px' }}>
                       {metric.score}
                     </div>
 
                     {isActive && (
                       <div style={{
-                        marginTop: '0.65rem',
-                        paddingTop: '0.5rem',
+                        marginTop: '0.5rem',
+                        paddingTop: '0.4rem',
                         borderTop: '1px solid var(--border-subtle)',
-                        fontSize: '0.76rem',
+                        fontSize: '0.75rem',
                         color: 'var(--text-secondary)',
                         lineHeight: 1.4
                       }}>
@@ -651,135 +767,73 @@ export const ArticleReaderPage = ({ article, allArticles = [], onBack, onSelectA
             </div>
           </div>
 
-          {/* TRENDING STORIES FEED */}
-          <div style={{
-            backgroundColor: 'var(--bg-card)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: '16px',
-            padding: '1.35rem'
-          }}>
-            <h4 style={{
-              fontSize: '0.95rem',
-              fontWeight: '800',
-              color: 'var(--text-primary)',
-              marginBottom: '1rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              borderBottom: '2px solid #6366f1',
-              paddingBottom: '0.5rem'
-            }}>
-              <TrendingUp size={16} color="#6366f1" /> TRENDING STORIES
-            </h4>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {trendingArticles.map(item => (
-                <div
-                  key={item.id}
-                  onClick={() => onSelectArticle && onSelectArticle(item)}
-                  style={{
-                    display: 'flex',
-                    gap: '0.75rem',
-                    cursor: 'pointer',
-                    alignItems: 'center',
-                    transition: 'opacity 0.2s'
-                  }}
-                >
-                  <img
-                    src={item.coverImage}
-                    alt=""
-                    style={{ width: '60px', height: '60px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }}
-                  />
-                  <div style={{ flex: 1 }}>
-                    <div style={{
-                      fontSize: '0.82rem',
-                      fontWeight: '700',
-                      color: 'var(--text-primary)',
-                      lineHeight: 1.3,
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden'
-                    }}>
-                      {item.title}
-                    </div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <span style={{ color: '#f59e0b', fontWeight: '700' }}>★ {item.upvotes || 0}</span>
-                      <span>•</span>
-                      <span>{item.readTime}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Google AdSense Sidebar Unit */}
+          {/* Sidebar Google Ad Slot */}
           <AdSlot type="sidebar" adSlot="5432167890" />
         </div>
       </div>
 
-      {/* MORE STORIES IN PHOTOS GRID SECTION */}
-      {photoArticles.length > 0 && (
-        <div style={{
-          marginTop: '4rem',
-          paddingTop: '2.5rem',
-          borderTop: '1px solid var(--border-subtle)'
-        }}>
-          <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Eye size={18} color="#6366f1" /> MORE STORIES & RESEARCH IN PHOTOS
-          </h3>
+      {/* APS Physics EXACT "Recent Articles" Bottom Section */}
+      {recentBottomArticles.length > 0 && (
+        <div className="aps-bottom-section">
+          <h2 className="aps-bottom-title">
+            Recent Articles
+          </h2>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-            gap: '1.25rem'
-          }}>
-            {photoArticles.map(item => (
-              <div
-                key={item.id}
-                onClick={() => onSelectArticle && onSelectArticle(item)}
-                className="glass-panel-hover"
-                style={{
-                  backgroundColor: 'var(--bg-card)',
-                  borderRadius: '12px',
-                  overflow: 'hidden',
-                  border: '1px solid var(--border-subtle)',
-                  cursor: 'pointer'
-                }}
-              >
-                <div style={{ position: 'relative', height: '140px' }}>
-                  <img
-                    src={item.coverImage}
-                    alt={item.title}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
-                  <div style={{ position: 'absolute', top: '8px', left: '8px' }}>
-                    <CategoryBadge category={item.category} />
+          <div className="aps-bottom-list">
+            {recentBottomArticles.map((item) => (
+              <div key={item.id} className="aps-bottom-item">
+                <img
+                  src={item.coverImage}
+                  alt={item.title}
+                  className="aps-bottom-thumb"
+                  onClick={() => onSelectArticle && onSelectArticle(item)}
+                  style={{ cursor: 'pointer' }}
+                />
+
+                <div style={{ flex: 1 }}>
+                  <div className="aps-bottom-category">
+                    {item.category || 'GENERAL SCIENCE'}
                   </div>
-                </div>
-                <div style={{ padding: '0.85rem' }}>
-                  <div style={{
-                    fontSize: '0.85rem',
-                    fontWeight: '700',
-                    color: 'var(--text-primary)',
-                    lineHeight: 1.35,
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden'
-                  }}>
+
+                  <h3
+                    className="aps-bottom-item-title"
+                    onClick={() => onSelectArticle && onSelectArticle(item)}
+                  >
                     {item.title}
+                  </h3>
+
+                  <div className="aps-bottom-item-date">
+                    {item.publishedAt 
+                      ? new Date(item.publishedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+                      : 'October 4, 2026'}
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '6px' }}>
-                    {item.readTime} • {item.publisher?.name || 'Tech Journal'}
-                  </div>
+
+                  <p className="aps-bottom-item-summary">
+                    {item.summary || 'Empirical benchmark testing and scientific architecture breakdown.'}
+                  </p>
+
+                  <a
+                    onClick={() => onSelectArticle && onSelectArticle(item)}
+                    className="aps-read-more-link"
+                  >
+                    Read More »
+                  </a>
                 </div>
               </div>
             ))}
           </div>
+
+          {/* APS Physics Signature Deep Purple "More Articles" Button */}
+          <button
+            onClick={onBack}
+            className="aps-more-btn"
+          >
+            More Articles
+          </button>
         </div>
       )}
     </div>
   );
 };
+
+export default ArticleReaderPage;

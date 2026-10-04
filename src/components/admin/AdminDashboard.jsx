@@ -47,80 +47,85 @@ export const AdminDashboard = ({
         zIndex: 40,
         width: '100%'
       }}>
-        <div style={{
+        <div className="admin-header-main" style={{
           width: '100%',
-          padding: '0.85rem 2rem',
+          padding: '0.85rem 1.5rem',
           display: 'flex',
           alignItems: 'center',
-          gap: '1.5rem'
+          gap: '1rem',
+          boxSizing: 'border-box'
         }}>
           {/* Left Brand & Back to Blog */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
             <button
               onClick={onBackToBlog}
               style={{
                 backgroundColor: theme === 'light' ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)',
                 border: '1px solid var(--border-subtle)',
                 color: 'var(--text-secondary)',
-                padding: '0.5rem 0.85rem',
+                padding: '0.45rem 0.75rem',
                 borderRadius: '8px',
                 cursor: 'pointer',
-                fontSize: '0.82rem',
+                fontSize: '0.8rem',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.4rem'
+                gap: '0.4rem',
+                whiteSpace: 'nowrap'
               }}
             >
-              <ArrowLeft size={15} /> Live Blog View
+              <ArrowLeft size={14} /> Live Blog
             </button>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <div style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '10px',
+                width: '34px',
+                height: '34px',
+                borderRadius: '9px',
                 background: 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)',
                 display: 'flex',
                 alignItems: 'center',
-                justify: 'center'
+                justifyContent: 'center',
+                flexShrink: 0
               }}>
-                <Shield size={20} color="white" />
+                <Shield size={18} color="white" />
               </div>
               <div>
-                <h1 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>
+                <h1 style={{ fontSize: '1.15rem', fontWeight: '800', margin: 0, letterSpacing: '-0.02em', color: 'var(--text-primary)', lineHeight: 1.1 }}>
                   ADMIN <span className="gradient-text">CONTROL BOARD</span>
                 </h1>
-                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                  Platform Governance & Agent Pipeline Management
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                  Platform Governance & Agent Pipeline
                 </span>
               </div>
             </div>
           </div>
 
           {/* Right Corner Group - Autonomous Badge, Theme Switcher, Logout */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginLeft: 'auto', flexShrink: 0 }}>
+          <div className="admin-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: 'auto', flexWrap: 'wrap' }}>
             <span style={{
-              fontSize: '0.78rem',
-              padding: '4px 12px',
+              fontSize: '0.75rem',
+              padding: '4px 10px',
               borderRadius: '9999px',
               backgroundColor: settings.governanceMode === 'autonomous' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
               color: settings.governanceMode === 'autonomous' ? '#10b981' : '#f59e0b',
               border: settings.governanceMode === 'autonomous' ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(245, 158, 11, 0.3)',
               fontWeight: '600',
-              display: 'flex',
+              display: 'inline-flex',
               alignItems: 'center',
-              gap: '5px'
+              gap: '4px',
+              whiteSpace: 'nowrap'
             }}>
-              <Zap size={13} /> {settings.governanceMode === 'autonomous' ? '100% Autonomous Mode' : 'Manual Review First'}
+              <Zap size={12} /> {settings.governanceMode === 'autonomous' ? 'Autonomous Mode' : 'Manual Review'}
             </span>
 
             {/* Theme Toggle Button */}
             <button
               onClick={onToggleTheme}
               className="theme-toggle-btn"
+              style={{ padding: '0.45rem', borderRadius: '8px' }}
               title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
             >
-              {theme === 'dark' ? <Sun size={18} color="#f59e0b" /> : <Moon size={18} color="#6366f1" />}
+              {theme === 'dark' ? <Sun size={16} color="#f59e0b" /> : <Moon size={16} color="#6366f1" />}
             </button>
 
             {/* Admin Account & Security Shortcut */}
@@ -130,18 +135,19 @@ export const AdminDashboard = ({
                 backgroundColor: activeView === 'account' ? 'rgba(99, 102, 241, 0.18)' : (theme === 'light' ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)'),
                 border: activeView === 'account' ? '1px solid #6366f1' : '1px solid var(--border-subtle)',
                 color: activeView === 'account' ? '#6366f1' : 'var(--text-secondary)',
-                padding: '0.5rem 0.85rem',
+                padding: '0.45rem 0.75rem',
                 borderRadius: '8px',
                 cursor: 'pointer',
-                fontSize: '0.82rem',
+                fontSize: '0.8rem',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.4rem',
-                fontWeight: '600'
+                gap: '0.35rem',
+                fontWeight: '600',
+                whiteSpace: 'nowrap'
               }}
               title="Admin Credentials & Security"
             >
-              <KeyRound size={15} /> Account & Password
+              <KeyRound size={14} /> Password
             </button>
 
             <button
@@ -150,37 +156,39 @@ export const AdminDashboard = ({
                 backgroundColor: 'rgba(244, 63, 94, 0.12)',
                 border: '1px solid rgba(244, 63, 94, 0.3)',
                 color: '#f43f5e',
-                padding: '0.5rem 0.9rem',
+                padding: '0.45rem 0.75rem',
                 borderRadius: '8px',
                 cursor: 'pointer',
-                fontSize: '0.82rem',
+                fontSize: '0.8rem',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.4rem',
-                fontWeight: '600'
+                gap: '0.35rem',
+                fontWeight: '600',
+                whiteSpace: 'nowrap'
               }}
             >
-              <LogOut size={15} /> Logout Session
+              <LogOut size={14} /> Logout
             </button>
           </div>
         </div>
 
-        {/* View Tabs - Full Width */}
-        <div style={{
+        {/* View Tabs - Full Width with Horizontal Touch Scroll */}
+        <div className="admin-tabs-bar no-scrollbar" style={{
           width: '100%',
-          padding: '0 2rem',
+          padding: '0 1.25rem',
           display: 'flex',
-          gap: '1.5rem',
+          gap: '1.25rem',
           borderTop: '1px solid var(--border-subtle)',
-          overflowX: 'auto'
+          overflowX: 'auto',
+          WebkitOverflowScrolling: 'touch'
         }}>
           {[
-            { id: 'queue', label: 'Content Queue & Articles', icon: Layers, count: pendingCount ? `${pendingCount} Pending` : null },
+            { id: 'queue', label: 'Content Queue', icon: Layers, count: pendingCount ? `${pendingCount} Pending` : null },
             { id: 'trends', label: 'Google Keyword Radar', icon: Flame, isBreakout: true },
-            { id: 'runner', label: 'On-Demand Article Writer', icon: Play },
-            { id: 'settings', label: 'Prompts & Governance Settings', icon: Settings },
-            { id: 'metrics', label: 'Visitor Analytics & Traffic Metrics', icon: Activity },
-            { id: 'account', label: 'Admin Security & Login Credentials', icon: KeyRound }
+            { id: 'runner', label: 'Article Writer', icon: Play },
+            { id: 'settings', label: 'Governance & Settings', icon: Settings },
+            { id: 'metrics', label: 'Visitor Analytics', icon: Activity },
+            { id: 'account', label: 'Security & Backup', icon: KeyRound }
           ].map(tab => {
             const Icon = tab.icon;
             const isActive = activeView === tab.id;
@@ -189,8 +197,8 @@ export const AdminDashboard = ({
                 key={tab.id}
                 onClick={() => setActiveView(tab.id)}
                 style={{
-                  padding: '0.9rem 0',
-                  fontSize: '0.88rem',
+                  padding: '0.75rem 0',
+                  fontSize: '0.85rem',
                   fontWeight: isActive ? '700' : '500',
                   color: isActive ? '#6366f1' : 'var(--text-secondary)',
                   borderBottom: isActive ? '2px solid #6366f1' : '2px solid transparent',
@@ -201,18 +209,19 @@ export const AdminDashboard = ({
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem',
-                  whiteSpace: 'nowrap'
+                  gap: '0.45rem',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0
                 }}
               >
-                <Icon size={16} color={isActive ? '#6366f1' : 'var(--text-muted)'} />
+                <Icon size={15} color={isActive ? '#6366f1' : 'var(--text-muted)'} />
                 {tab.label}
                 {tab.count && (
                   <span style={{
-                    fontSize: '0.7rem',
+                    fontSize: '0.68rem',
                     backgroundColor: 'rgba(245, 158, 11, 0.2)',
                     color: '#f59e0b',
-                    padding: '2px 8px',
+                    padding: '1px 6px',
                     borderRadius: '9999px',
                     fontWeight: '700'
                   }}>
@@ -226,7 +235,7 @@ export const AdminDashboard = ({
       </header>
 
       {/* Main Admin Dashboard Body */}
-      <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '2rem 1.5rem' }}>
+      <main className="main-content-padding" style={{ maxWidth: '1280px', margin: '0 auto', padding: '1.75rem 1.25rem' }}>
         <AutonomousNewsroomBanner
           governanceMode={settings.governanceMode}
           settings={settings}

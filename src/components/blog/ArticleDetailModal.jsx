@@ -1,16 +1,7 @@
 import React from 'react';
-import { ArticleReaderPage } from './ArticleReaderPage';
 
-export const ArticleDetailModal = ({ article, allArticles = [], onClose, onSelectArticle, onOpenAuthorModal }) => {
-  if (!article) return null;
+// Article reader is rendered directly as a full-page layout in App.jsx.
+// This component returns null to prevent duplicate renders and modal stacking issues.
+export const ArticleDetailModal = () => null;
 
-  return (
-    <ArticleReaderPage
-      article={article}
-      allArticles={allArticles}
-      onBack={onClose}
-      onSelectArticle={onSelectArticle}
-      onOpenAuthorModal={onOpenAuthorModal}
-    />
-  );
-};
+export default ArticleDetailModal;
