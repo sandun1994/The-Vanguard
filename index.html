@@ -2,8 +2,21 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <!-- Monetag Multitag Monetization Tag -->
-    <script src="https://quge5.com/88/tag.min.js" data-zone="290406" async data-cfasync="false"></script>
+    <!-- Monetag Multitag Monetization Tag (Active on production, exempts localhost & admin to avoid popup loops) -->
+    <script>
+      (function() {
+        var isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        var isAdmin = window.location.hash.indexOf('admin') !== -1;
+        if (!isLocal && !isAdmin) {
+          var s = document.createElement('script');
+          s.src = 'https://quge5.com/88/tag.min.js';
+          s.setAttribute('data-zone', '290406');
+          s.async = true;
+          s.setAttribute('data-cfasync', 'false');
+          document.head.appendChild(s);
+        }
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>The Vanguard | Daily Tech & Science Intelligence</title>

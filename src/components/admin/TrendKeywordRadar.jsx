@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Flame, 
   TrendingUp, 
@@ -13,11 +13,14 @@ import {
   Check, 
   Compass, 
   Globe, 
-  ExternalLink 
+  ExternalLink,
+  Radio
 } from 'lucide-react';
 import { 
   getTrendingKeywords, 
   analyzeSearchPattern, 
+  fetchLiveGoogleTrends,
+  getTrendsSyncStatus,
   TREND_TIMEFRAMES, 
   TREND_CATEGORIES 
 } from '../../services/trendsService';
@@ -29,6 +32,52 @@ export const TrendKeywordRadar = ({ onTriggerPipelineWithTrend }) => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analyzedResult, setAnalyzedResult] = useState(null);
   const [expandedTrendId, setExpandedTrendId] = useState(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState(getTrendsSyncStatus());
+  const [syncFeedback, setSyncFeedback] = useState('');
+
+  // Auto-sync on mount
+  useEffect(() => {
+    let mounted = true;
+
+    const runAutoSync = async () => {
+      const res = await fetchLiveGoogleTrends();
+      if (mounted) {
+        setSyncStatus(getTrendsSyncStatus());
+      }
+    };
+
+    runAutoSync();
+
+    const handleSyncEvent = () => {
+      if (mounted) setSyncStatus(getTrendsSyncStatus());
+    };
+
+    window.addEventListener('vanguard-trends-synced', handleSyncEvent);
+    return () => {
+      mounted = false;
+      window.removeEventListener('vanguard-trends-synced', handleSyncEvent);
+    };
+  }, []);
+
+  const handleManualSync = async () => {
+    setIsSyncing(true);
+    setSyncFeedback('');
+    try {
+      const result = await fetchLiveGoogleTrends({ force: true });
+      setSyncStatus(getTrendsSyncStatus());
+      if (result.success) {
+        setSyncFeedback(`Successfully synchronized ${result.count} live breakout trends from Google!`);
+      } else {
+        setSyncFeedback('Synchronized with local Google Trends cache.');
+      }
+    } catch (e) {
+      setSyncFeedback('Using cached Google Trends signals.');
+    } finally {
+      setIsSyncing(false);
+      setTimeout(() => setSyncFeedback(''), 4500);
+    }
+  };
 
   const trends = getTrendingKeywords({ timeframe, category: selectedCategory });
 
@@ -90,7 +139,7 @@ export const TrendKeywordRadar = ({ onTriggerPipelineWithTrend }) => {
               <Flame size={26} color="white" />
             </div>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
                 <h2 style={{ fontSize: '1.4rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)' }}>
                   Google Keyword & Search Pattern Radar
                 </h2>
@@ -115,7 +164,56 @@ export const TrendKeywordRadar = ({ onTriggerPipelineWithTrend }) => {
               </p>
             </div>
           </div>
+
+          {/* Sync Button & Timestamp */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.4rem' }}>
+            <button
+              onClick={handleManualSync}
+              disabled={isSyncing}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.6rem 1.15rem',
+                borderRadius: '10px',
+                background: isSyncing ? 'rgba(99, 102, 241, 0.2)' : 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+                color: 'white',
+                border: 'none',
+                fontWeight: '700',
+                fontSize: '0.84rem',
+                cursor: isSyncing ? 'not-allowed' : 'pointer',
+                boxShadow: isSyncing ? 'none' : '0 4px 14px rgba(99, 102, 241, 0.35)',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <RefreshCw size={15} style={{ animation: isSyncing ? 'spin 1s linear infinite' : 'none' }} />
+              {isSyncing ? 'Syncing Real-Time Trends...' : '🔄 Sync Live Google Trends'}
+            </button>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+              {syncStatus.lastSynced 
+                ? `Last Synced: ${new Date(syncStatus.lastSynced).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` 
+                : 'Synced with Google Live Engine'}
+            </span>
+          </div>
         </div>
+
+        {syncFeedback && (
+          <div style={{
+            marginTop: '0.75rem',
+            padding: '0.65rem 1rem',
+            borderRadius: '8px',
+            backgroundColor: 'rgba(16, 185, 129, 0.15)',
+            border: '1px solid rgba(16, 185, 129, 0.3)',
+            color: '#10b981',
+            fontSize: '0.82rem',
+            fontWeight: '600',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <Check size={16} /> {syncFeedback}
+          </div>
+        )}
 
         {/* Timeframe Switcher Tabs */}
         <div style={{
@@ -343,17 +441,36 @@ export const TrendKeywordRadar = ({ onTriggerPipelineWithTrend }) => {
             >
               <div>
                 {/* Badges Bar */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
-                  <span style={{
-                    fontSize: '0.72rem',
-                    padding: '3px 8px',
-                    borderRadius: '6px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.06)',
-                    color: 'var(--text-secondary)',
-                    fontWeight: '600'
-                  }}>
-                    {trend.category}
-                  </span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.4rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                    <span style={{
+                      fontSize: '0.72rem',
+                      padding: '3px 8px',
+                      borderRadius: '6px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                      color: 'var(--text-secondary)',
+                      fontWeight: '600'
+                    }}>
+                      {trend.publisherIcon ? `${trend.publisherIcon} ` : ''}{trend.category}
+                    </span>
+                    {trend.isLiveFeed && (
+                      <span style={{
+                        fontSize: '0.68rem',
+                        padding: '2px 7px',
+                        borderRadius: '5px',
+                        backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                        color: '#10b981',
+                        border: '1px solid rgba(16, 185, 129, 0.4)',
+                        fontWeight: '700',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}>
+                        <span style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block' }} />
+                        LIVE GOOGLE SIGNAL
+                      </span>
+                    )}
+                  </div>
 
                   <span style={{
                     fontSize: '0.75rem',

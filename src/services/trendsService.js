@@ -277,15 +277,139 @@ const TRENDING_SEARCH_PATTERNS = [
   }
 ];
 
+const STORAGE_KEY_LIVE_TRENDS = 'the_vanguard_live_trends_v2';
+const STORAGE_KEY_LAST_SYNC = 'the_vanguard_live_trends_synced_at';
+
+// In-memory cache of live synced trends
+let inMemoryLiveTrends = [];
+
+// Helper to initialize memory cache from localStorage
+function initLiveTrendsFromStorage() {
+  if (typeof window === 'undefined') return;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_LIVE_TRENDS);
+    if (raw) {
+      inMemoryLiveTrends = JSON.parse(raw);
+    }
+  } catch (e) {
+    console.error('Error loading live trends from localStorage:', e);
+  }
+}
+initLiveTrendsFromStorage();
+
+/**
+ * Fetch real-time live Google Trends & News from /api/trends
+ * Auto-caches in localStorage and notifies subscribers
+ */
+export const fetchLiveGoogleTrends = async ({ force = false } = {}) => {
+  if (typeof window === 'undefined') return { success: false, trends: [] };
+
+  try {
+    const lastSyncStr = localStorage.getItem(STORAGE_KEY_LAST_SYNC);
+    const lastSyncTime = lastSyncStr ? new Date(lastSyncStr).getTime() : 0;
+    const now = Date.now();
+    const cacheAgeMs = now - lastSyncTime;
+    const CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes
+
+    // Return cached if fresh and not forced
+    if (!force && cacheAgeMs < CACHE_TTL_MS && inMemoryLiveTrends.length > 0) {
+      return {
+        success: true,
+        cached: true,
+        count: inMemoryLiveTrends.length,
+        syncedAt: lastSyncStr,
+        trends: inMemoryLiveTrends
+      };
+    }
+
+    const res = await fetch('/api/trends');
+    if (!res.ok) {
+      throw new Error(`Trends API returned status ${res.status}`);
+    }
+
+    const data = await res.json();
+    if (data.success && Array.isArray(data.trends) && data.trends.length > 0) {
+      inMemoryLiveTrends = data.trends;
+      const syncedAt = data.syncedAt || new Date().toISOString();
+      localStorage.setItem(STORAGE_KEY_LIVE_TRENDS, JSON.stringify(data.trends));
+      localStorage.setItem(STORAGE_KEY_LAST_SYNC, syncedAt);
+
+      // Dispatch event for UI reactivity
+      window.dispatchEvent(new CustomEvent('vanguard-trends-synced', {
+        detail: { count: data.trends.length, syncedAt, trends: data.trends }
+      }));
+
+      return {
+        success: true,
+        cached: false,
+        count: data.trends.length,
+        syncedAt,
+        trends: data.trends
+      };
+    }
+  } catch (error) {
+    console.warn('[TrendsService] Failed to fetch live Google trends, using local cache/seeds:', error);
+  }
+
+  return {
+    success: false,
+    cached: true,
+    count: inMemoryLiveTrends.length,
+    syncedAt: localStorage.getItem(STORAGE_KEY_LAST_SYNC) || null,
+    trends: inMemoryLiveTrends
+  };
+};
+
+/**
+ * Get trends sync status
+ */
+export const getTrendsSyncStatus = () => {
+  if (typeof window === 'undefined') return { lastSynced: null, isLive: false, totalTrends: 0 };
+  const lastSynced = localStorage.getItem(STORAGE_KEY_LAST_SYNC);
+  const liveCount = inMemoryLiveTrends.length;
+  return {
+    lastSynced,
+    isLive: liveCount > 0,
+    totalTrends: liveCount + TRENDING_SEARCH_PATTERNS.length
+  };
+};
+
 /**
  * Retrieve curated search pattern trends by timeframe and category
+ * Merges freshly fetched real-time Google search spikes with baseline seeds
  */
 export const getTrendingKeywords = ({ timeframe = 'today', category = 'All Categories' } = {}) => {
-  return TRENDING_SEARCH_PATTERNS.filter(t => {
-    const matchesTime = timeframe === 'all' || t.timeframe === timeframe;
-    const matchesCategory = category === 'All Categories' || t.category === category;
-    return matchesTime && matchesCategory;
-  });
+  initLiveTrendsFromStorage();
+
+  const normalize = (str) => (str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const seen = new Set();
+  const merged = [];
+
+  // 1. Prioritize Live Google search signals
+  for (const item of inMemoryLiveTrends) {
+    const matchesTime = timeframe === 'all' || item.timeframe === timeframe;
+    const matchesCategory = category === 'All Categories' || item.category === category;
+    const key = normalize(item.keyword);
+
+    if (matchesTime && matchesCategory && !seen.has(key)) {
+      seen.add(key);
+      merged.push({ ...item, isLiveFeed: true });
+    }
+  }
+
+  // 2. Append baseline curated patterns as supplementary data
+  for (const item of TRENDING_SEARCH_PATTERNS) {
+    const matchesTime = timeframe === 'all' || item.timeframe === timeframe;
+    const matchesCategory = category === 'All Categories' || item.category === category;
+    const key = normalize(item.keyword);
+
+    if (matchesTime && matchesCategory && !seen.has(key)) {
+      seen.add(key);
+      merged.push({ ...item, isLiveFeed: false });
+    }
+  }
+
+  return merged;
 };
 
 /**

@@ -3,7 +3,7 @@
 
 import { runAgentPipeline } from './agentPipeline';
 import { getArticles, getSettings, saveArticle } from './storage';
-import { getTrendingKeywords, analyzeSearchPattern } from './trendsService';
+import { getTrendingKeywords, analyzeSearchPattern, fetchLiveGoogleTrends } from './trendsService';
 
 const ENGINE_STORAGE_KEY = 'novum_autonomous_engine_state_v1';
 
@@ -95,7 +95,14 @@ export const findNextUnpublishedTrend = async () => {
     }
   }
 
-  // 2. Check Today's Breakouts from Trends Service
+  // 2. Fetch fresh Live Google Trends before checking breakouts
+  try {
+    await fetchLiveGoogleTrends();
+  } catch (e) {
+    // Non-fatal, fallback to cached
+  }
+
+  // 3. Check Today's Breakouts from Trends Service (Live signals take top priority)
   const todayTrends = getTrendingKeywords({ timeframe: 'today' });
   for (const trend of todayTrends) {
     if (!isTopicAlreadyCovered(trend.keyword)) {
