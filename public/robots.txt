@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://thevanguard.org/sitemap.xml
+Sitemap: https://thevanguard.edu.lk/sitemap.xml

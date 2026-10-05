@@ -59,11 +59,52 @@ export const ArticleReaderPage = ({ article: initialArticle, allArticles = [], o
     return () => window.removeEventListener('keydown', handleEsc);
   }, [onBack]);
 
-  // Scroll to top and set Dynamic SEO Title & Schema
+  // Scroll to top and set Dynamic SEO Title, Meta Tags & Schema
   useEffect(() => {
     window.scrollTo(0, 0);
     const originalTitle = document.title;
     document.title = `${article.title} | THE VANGUARD JOURNAL`;
+
+    const descriptionMeta = document.querySelector('meta[name="description"]');
+    const originalDescription = descriptionMeta ? descriptionMeta.getAttribute('content') : '';
+    if (descriptionMeta && article.summary) {
+      descriptionMeta.setAttribute('content', article.summary);
+    }
+
+    const canonicalLink = document.querySelector('link[rel="canonical"]');
+    const originalCanonical = canonicalLink ? canonicalLink.getAttribute('href') : '';
+    const articleCanonicalUrl = `https://thevanguard.edu.lk/article/${article.slug || article.id}`;
+    if (canonicalLink) {
+      canonicalLink.setAttribute('href', articleCanonicalUrl);
+    }
+
+    const ogTitle = document.querySelector('meta[property="og:title"]');
+    const origOgTitle = ogTitle ? ogTitle.getAttribute('content') : '';
+    if (ogTitle) ogTitle.setAttribute('content', `${article.title} | THE VANGUARD JOURNAL`);
+
+    const ogDesc = document.querySelector('meta[property="og:description"]');
+    const origOgDesc = ogDesc ? ogDesc.getAttribute('content') : '';
+    if (ogDesc && article.summary) ogDesc.setAttribute('content', article.summary);
+
+    const ogUrl = document.querySelector('meta[property="og:url"]');
+    const origOgUrl = ogUrl ? ogUrl.getAttribute('content') : '';
+    if (ogUrl) ogUrl.setAttribute('content', articleCanonicalUrl);
+
+    const ogImage = document.querySelector('meta[property="og:image"]');
+    const origOgImage = ogImage ? ogImage.getAttribute('content') : '';
+    if (ogImage && article.coverImage) ogImage.setAttribute('content', article.coverImage);
+
+    const twitterTitle = document.querySelector('meta[name="twitter:title"]');
+    const origTwitterTitle = twitterTitle ? twitterTitle.getAttribute('content') : '';
+    if (twitterTitle) twitterTitle.setAttribute('content', `${article.title} | THE VANGUARD JOURNAL`);
+
+    const twitterDesc = document.querySelector('meta[name="twitter:description"]');
+    const origTwitterDesc = twitterDesc ? twitterDesc.getAttribute('content') : '';
+    if (twitterDesc && article.summary) twitterDesc.setAttribute('content', article.summary);
+
+    const twitterImage = document.querySelector('meta[name="twitter:image"]');
+    const origTwitterImage = twitterImage ? twitterImage.getAttribute('content') : '';
+    if (twitterImage && article.coverImage) twitterImage.setAttribute('content', article.coverImage);
 
     const schemaId = 'news-article-json-ld';
     let scriptTag = document.getElementById(schemaId);
@@ -77,6 +118,10 @@ export const ArticleReaderPage = ({ article: initialArticle, allArticles = [], o
     const schemaData = {
       "@context": "https://schema.org",
       "@type": "NewsArticle",
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": articleCanonicalUrl
+      },
       "headline": article.title,
       "description": article.summary || article.title,
       "image": [article.coverImage],
@@ -89,7 +134,11 @@ export const ArticleReaderPage = ({ article: initialArticle, allArticles = [], o
       "publisher": {
         "@type": "Organization",
         "name": "The Vanguard Journal",
-        "url": "https://thevanguard.edu.lk"
+        "url": "https://thevanguard.edu.lk",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://thevanguard.edu.lk/favicon.svg"
+        }
       }
     };
 
@@ -97,6 +146,15 @@ export const ArticleReaderPage = ({ article: initialArticle, allArticles = [], o
 
     return () => {
       document.title = originalTitle;
+      if (descriptionMeta) descriptionMeta.setAttribute('content', originalDescription);
+      if (canonicalLink) canonicalLink.setAttribute('href', originalCanonical);
+      if (ogTitle) ogTitle.setAttribute('content', origOgTitle);
+      if (ogDesc) ogDesc.setAttribute('content', origOgDesc);
+      if (ogUrl) ogUrl.setAttribute('content', origOgUrl);
+      if (ogImage) ogImage.setAttribute('content', origOgImage);
+      if (twitterTitle) twitterTitle.setAttribute('content', origTwitterTitle);
+      if (twitterDesc) twitterDesc.setAttribute('content', origTwitterDesc);
+      if (twitterImage) twitterImage.setAttribute('content', origTwitterImage);
       if (scriptTag) scriptTag.remove();
     };
   }, [article, authorName]);

@@ -192,7 +192,7 @@ export const AuthorProfileModal = ({ isOpen, onClose, authorName = 'Sandun Hewaw
                 <Award size={14} color="#a6ce39" /> ORCID 0000-0002-1823-9421
               </a>
               <a
-                href="mailto:sandun@thevanguard.org"
+                href="mailto:sandun@thevanguard.edu.lk"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
